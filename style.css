@@ -1031,3 +1031,61 @@ body {
     80% { opacity: 1; transform: translateY(40px) scale(1); }
     100% { opacity: 0; transform: translateY(100px) scale(1); }
 }
+
+/* =========================================
+   --- UI OVERFLOW & SCALING FIXES ---
+   ========================================= */
+
+/* 1. Lock the mail container height so it doesn't break the bottom border */
+.messages-container {
+    height: 55vh;         /* Scales dynamically with the screen height */
+    min-height: 400px;    /* Prevents it from getting too crushed */
+    max-height: 800px;
+    overflow: hidden;     /* Keeps children safely inside the neon borders */
+}
+
+/* 2. Turn the columns into individually scrollable boxes */
+.mail-sidebar,
+.mail-list,
+.mail-content {
+    overflow-y: auto;     /* Enables vertical scrolling */
+    height: 100%;
+}
+
+/* 3. Cyberpunk-themed scrollbars (Chrome/Safari/Edge) */
+.mail-list::-webkit-scrollbar,
+.mail-content::-webkit-scrollbar,
+.mail-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+.mail-list::-webkit-scrollbar-track,
+.mail-content::-webkit-scrollbar-track,
+.mail-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.mail-list::-webkit-scrollbar-thumb,
+.mail-content::-webkit-scrollbar-thumb,
+.mail-sidebar::-webkit-scrollbar-thumb {
+    background: var(--cyan, #00f0ff);
+    border-radius: 2px;
+}
+
+/* 4. Fix for Laptops / Small Screens cutting off the bottom */
+@media (max-height: 850px), (max-width: 1000px) {
+    body, html {
+        /* Force the browser to allow normal scrolling if the screen is too small */
+        overflow-y: auto !important;
+    }
+    
+    .os-container {
+        /* Un-lock the height so it can safely stretch down the page */
+        height: auto !important;
+        min-height: 100vh;
+        padding-bottom: 2rem;
+    }
+    
+    .messages-container {
+        /* Give it plenty of vertical breathing room on small screens */
+        height: 600px;
+    }
+}
