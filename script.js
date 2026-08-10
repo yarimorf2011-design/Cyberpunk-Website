@@ -576,7 +576,7 @@ function openCompose() {
 async function sendOutboundEmail() {
     let toField = document.getElementById('compose-to').value.trim().toLowerCase();
     
-    // --- NEW: Auto-complete the domain if it's missing ---
+    // Auto-complete the domain if it's missing
     if (toField !== '' && !toField.includes('@')) {
         toField = toField + '@cybernet.com';
     }
@@ -627,12 +627,9 @@ async function sendOutboundEmail() {
             attachedFunds: transferAmount
         });
 
-        if (transferAmount > 0) {
-            alert(`[TRANSMISSION SUCCESSFUL]\nDatashard and ${transferAmount} €$ routed to: ${toField}`);
-        } else {
-            alert(`[TRANSMISSION SUCCESSFUL]\nDatashard routed to: ${toField}`);
-        }
+        // The default browser popups have been removed from here!
         
+        // Immediately switches to the Sent folder so the user knows it worked
         switchFolder('sent');
 
     } catch (error) {
