@@ -1,5 +1,8 @@
 // --- SYSTEM BOOT & USER REGISTRATION ---
 
+let myEmail = null;
+let currentFunds = 0;
+
 window.addEventListener('DOMContentLoaded', () => {
     const savedEmail = localStorage.getItem('cybernetEmail');
     
@@ -7,7 +10,9 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('setup-modal').classList.remove('hidden');
         document.getElementById('username-input').focus();
     } else {
+        myEmail = savedEmail;
         document.getElementById('user-email-display').innerText = savedEmail.toUpperCase();
+        bootNetworkListeners();
     }
 });
 
@@ -19,18 +24,28 @@ function registerUser() {
     const newEmail = `${formattedName}@cybernet.com`;
     
     localStorage.setItem('cybernetEmail', newEmail);
+    myEmail = newEmail;
     
     document.getElementById('user-email-display').innerText = newEmail.toUpperCase();
     document.getElementById('setup-modal').classList.add('hidden');
     
     const dynamicEmails = document.querySelectorAll('.dynamic-user-email');
     dynamicEmails.forEach(el => el.innerText = newEmail.toLowerCase());
+    
+    bootNetworkListeners();
 }
 
 function handleSetupEnter(event) {
     if (event.key === 'Enter') {
         registerUser();
     }
+}
+
+// Boot internal network systems only after user is registered
+function bootNetworkListeners() {
+    initEmailWiretap();
+    initBankWiretap();
+    initCallWiretap();
 }
 
 // --- TAB NAVIGATION SYSTEM ---
@@ -73,41 +88,13 @@ audioPlayer.volume = currentVolume;
 let activeStationIndex = null;
 let activeSongIndex = null;
 
-// --- STATION DATA ---
 const stations = [
-    { 
-        freq: "", 
-        name: "No Station", 
-        songs: [], 
-        cover: ""
-    },
-    { 
-        freq: "88.9", 
-        name: "PACIFIC DREAMS", 
-        songs: ["Pacific Dreams/Delicate Weapon.mp3", "Pacific Dreams/My Lullaby for You.mp3", "Pacific Dreams/Night City.mp3"],
-        cover: "PacificDreamsIcon.jpg"
-    },
-    { 
-        freq: "89.3", 
-        name: "RADIO VEXELSTROM", 
-        songs: ["Vexelstorm/Kill the Messenger.mp3", "Vexelstorm/Resist and Disorder.mp3", "Vexelstorm/Night City Aliens.mp3", "Vexelstorm/Never Stop Me.mp3"], 
-        cover: "VexelstormIcon.jpg"
-    },
-    { 
-        freq: "89.7", 
-        name: "ROYAL BLUE", 
-        songs: ["Royal Blue/Generique.mp3", "Royal Blue/Impressions.mp3", "Royal Blue/'Round Midnight.mp3", "Royal Blue/You Don't Know What Love Is.mp3"], 
-        cover: "RoyalBlueIcon.jpg"
-    },
-    { 
-        freq: "98.7", 
-        name: "BODY HEAT RADIO",
-        songs: ["Body Heat/Friday Night Fire Fight.mp3", "Body Heat/I Really Want to Stay at Your House.mp3", "Body Heat/On My Way to Hell.mp3", "Body Heat/Who's Ready for Tomorrow.mp3"],
-        cover: "BodyHeat.jpg"
-    }
+    { freq: "", name: "No Station", songs: [], cover: "" },
+    { freq: "88.9", name: "PACIFIC DREAMS", songs: ["Pacific Dreams/Delicate Weapon.mp3", "Pacific Dreams/My Lullaby for You.mp3", "Pacific Dreams/Night City.mp3"], cover: "PacificDreamsIcon.jpg" },
+    { freq: "89.3", name: "RADIO VEXELSTROM", songs: ["Vexelstorm/Kill the Messenger.mp3", "Vexelstorm/Resist and Disorder.mp3", "Vexelstorm/Night City Aliens.mp3", "Vexelstorm/Never Stop Me.mp3"], cover: "VexelstormIcon.jpg" },
+    { freq: "89.7", name: "ROYAL BLUE", songs: ["Royal Blue/Generique.mp3", "Royal Blue/Impressions.mp3", "Royal Blue/'Round Midnight.mp3", "Royal Blue/You Don't Know What Love Is.mp3"], cover: "RoyalBlueIcon.jpg" },
+    { freq: "98.7", name: "BODY HEAT RADIO", songs: ["Body Heat/Friday Night Fire Fight.mp3", "Body Heat/I Really Want to Stay at Your House.mp3", "Body Heat/On My Way to Hell.mp3", "Body Heat/Who's Ready for Tomorrow.mp3"], cover: "BodyHeat.jpg" }
 ];
-
-// --- RADIO FUNCTIONS ---
 
 function openRadio() {
     document.getElementById('radio-modal').classList.remove('hidden');
@@ -150,16 +137,13 @@ function playStation(stationIndex) {
     }
     
     let newSongIndex = Math.floor(Math.random() * station.songs.length);
-
     if (station.songs.length > 1 && newSongIndex === activeSongIndex) {
         newSongIndex = (newSongIndex + 1) % station.songs.length;
     }
-
     activeSongIndex = newSongIndex;
     const selectedSong = station.songs[activeSongIndex];
 
     document.getElementById('now-playing-title').innerText = `${station.name} - ${selectedSong.replace('.mp3', '').toUpperCase()}`;
-    
     const artDiv = document.getElementById('radio-art');
     if (station.cover) {
         artDiv.style.backgroundImage = `url('radio/${station.cover}')`;
@@ -169,7 +153,7 @@ function playStation(stationIndex) {
 
     audioPlayer.src = `radio/${selectedSong}`;
     audioPlayer.play().catch(e => {
-        console.error("Playback failed. Check if file exists in the 'radio' folder:", e);
+        console.error("Playback failed:", e);
         document.getElementById('now-playing-title').innerText = "ERROR: FILE NOT FOUND";
     });
 }
@@ -185,10 +169,8 @@ function adjustVolume(change) {
 audioPlayer.addEventListener('ended', () => {
     if (activeStationIndex !== null && stations[activeStationIndex]) {
         const station = stations[activeStationIndex];
-        
         if (station.songs.length > 0) {
             let nextSongIndex;
-
             if (station.songs.length > 1) {
                 do {
                     nextSongIndex = Math.floor(Math.random() * station.songs.length);
@@ -196,25 +178,21 @@ audioPlayer.addEventListener('ended', () => {
             } else {
                 nextSongIndex = 0;
             }
-
             activeSongIndex = nextSongIndex;
             const nextSong = station.songs[activeSongIndex];
 
             document.getElementById('now-playing-title').innerText = `${station.name} - ${nextSong.replace('.mp3', '').toUpperCase()}`;
             audioPlayer.src = `radio/${nextSong}`;
-            audioPlayer.play().catch(e => console.error("Auto-next playback error:", e));
+            audioPlayer.play().catch(e => console.error(e));
         }
     }
 });
 
 
 // --- GLOBAL HOVER SOUND SYSTEM ---
-
 const uiHoverSound = new Audio('assets/HoverSound.ogg'); 
 uiHoverSound.volume = 0.4; 
-
 const allButtons = document.querySelectorAll('button, .tab, .app-item');
-
 allButtons.forEach(btn => {
     btn.addEventListener('mouseenter', () => {
         uiHoverSound.currentTime = 0; 
@@ -222,12 +200,8 @@ allButtons.forEach(btn => {
     });
 });
 
-
-// --- GLOBAL RIGHT-CLICK SOUND ---
-
 const leftClickSound = new Audio('assets/ClickSound.ogg'); 
 leftClickSound.volume = 0.8; 
-
 document.addEventListener('mousedown', (event) => {
     if (event.button === 1) {
         leftClickSound.currentTime = 0;
@@ -237,7 +211,6 @@ document.addEventListener('mousedown', (event) => {
 
 
 // --- AI CHAT SYSTEM (VERCEL PROXY UPLINK) ---
-
 function openChat() {
     document.getElementById('chat-modal').classList.remove('hidden');
     document.getElementById('chat-input').focus();
@@ -256,7 +229,6 @@ function handleChatEnter(event) {
 async function sendChatMessage() {
     const inputField = document.getElementById('chat-input');
     const messageText = inputField.value.trim();
-    
     if (messageText === "") return;
 
     addMessageToUI('USER', messageText, 'user-message');
@@ -265,12 +237,9 @@ async function sendChatMessage() {
     const loadingId = addMessageToUI('OVERSEER', '[Processing...]', 'ai-message');
 
     try {
-        // Ping our secure Vercel API endpoint
         const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: messageText })
         });
 
@@ -287,7 +256,6 @@ async function sendChatMessage() {
         } else {
             addMessageToUI('SYSTEM ERROR', 'No signal detected from subnet.', 'ai-message');
         }
-
     } catch (error) {
         console.error("API Error:", error);
         document.getElementById(loadingId).remove();
@@ -302,7 +270,6 @@ function addMessageToUI(sender, text, cssClass) {
     
     const uniqueId = 'msg-' + Date.now();
     msgDiv.id = uniqueId;
-    
     msgDiv.innerHTML = `<span class="sender">${sender}:</span> <span class="message-content">${text}</span>`;
     
     chatHistory.appendChild(msgDiv);
@@ -330,13 +297,10 @@ function typeWriterEffect(elementId, text, speed) {
 
 
 // --- BIOTECHNICA REAL-TIME WEATHER SYSTEM ---
-
 function openWeather() {
     document.getElementById('weather-modal').classList.remove('hidden');
-    
     document.getElementById('condition-display').innerText = "LINKING TO SATELLITE...";
     document.getElementById('condition-display').style.color = "#33ff33";
-    
     fetchRealWeather();
 }
 
@@ -360,30 +324,12 @@ async function fetchRealWeather() {
         let aqi = Math.floor(Math.random() * 40) + 10; 
         let rads = (Math.random() * 1.5).toFixed(1);
 
-        if (weatherCode === 0) {
-            cyberpunkCondition = "CLEAR SKY";
-            conditionColor = "#33ff33"; 
-        } else if (weatherCode >= 1 && weatherCode <= 3) {
-            cyberpunkCondition = "HEAVY SMOG";
-            conditionColor = "#ffcc00"; 
-            aqi += 40;
-        } else if (weatherCode === 45 || weatherCode === 48) {
-            cyberpunkCondition = "TOXIC FOG";
-            conditionColor = "#ffcc00";
-            aqi += 80;
-        } else if ((weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) {
-            cyberpunkCondition = "ACID RAIN";
-            conditionColor = "#ff2a2a"; 
-            rads = (Math.random() * 3 + 2).toFixed(1); 
-        } else if (weatherCode >= 71 && weatherCode <= 86) {
-            cyberpunkCondition = "NUCLEAR WINTER"; 
-            conditionColor = "#00f0ff"; 
-            temp = realTemp; 
-        } else if (weatherCode >= 95) {
-            cyberpunkCondition = "RAD-STORM";
-            conditionColor = "#ff2a2a"; 
-            rads = (Math.random() * 8 + 5).toFixed(1);
-        }
+        if (weatherCode === 0) { cyberpunkCondition = "CLEAR SKY"; conditionColor = "#33ff33"; } 
+        else if (weatherCode >= 1 && weatherCode <= 3) { cyberpunkCondition = "HEAVY SMOG"; conditionColor = "#ffcc00"; aqi += 40; } 
+        else if (weatherCode === 45 || weatherCode === 48) { cyberpunkCondition = "TOXIC FOG"; conditionColor = "#ffcc00"; aqi += 80; } 
+        else if ((weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) { cyberpunkCondition = "ACID RAIN"; conditionColor = "#ff2a2a"; rads = (Math.random() * 3 + 2).toFixed(1); } 
+        else if (weatherCode >= 71 && weatherCode <= 86) { cyberpunkCondition = "NUCLEAR WINTER"; conditionColor = "#00f0ff"; } 
+        else if (weatherCode >= 95) { cyberpunkCondition = "RAD-STORM"; conditionColor = "#ff2a2a"; rads = (Math.random() * 8 + 5).toFixed(1); }
 
         document.querySelector('.location-tag').innerText = "NODE: ZELL, ZURICH (CH)";
         document.getElementById('temp-display').innerText = `${realTemp}°C`;
@@ -391,7 +337,6 @@ async function fetchRealWeather() {
         const conditionEl = document.getElementById('condition-display');
         conditionEl.innerText = cyberpunkCondition;
         conditionEl.style.color = conditionColor;
-
         document.getElementById('aqi-display').innerText = aqi;
         document.getElementById('rad-display').innerText = `${rads} Sv`;
         
@@ -405,9 +350,7 @@ async function fetchRealWeather() {
     }
 }
 
-
-// --- REAL-TIME CLOUD EMAIL SYSTEM (FIREBASE) ---
-
+// --- FIREBASE INITIALIZATION ---
 const firebaseConfig = {
   apiKey: "AIzaSyCrLr7l2F89qzqV3Xmn1P6NLJ6nl_HSOPU",
   authDomain: "keystone-cybernet.firebaseapp.com",
@@ -419,35 +362,70 @@ const firebaseConfig = {
   measurementId: "G-JZXW6HR4NP"
 };
 
-// Initialize Firebase Compat
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let emailDatabase = [];
-let currentFolder = 'inbox';
-const myEmail = localStorage.getItem('cybernetEmail') || "unknown@cybernet.com";
 
-// Netwatch Wiretap (Real-Time Cloud Listener)
-db.collection("emails")
-    .where("participants", "array-contains", myEmail)
-    .onSnapshot((snapshot) => {
-        emailDatabase = [];
-        
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            data.id = doc.id; 
-            data.folder = (data.from === myEmail) ? 'sent' : 'inbox';
-            emailDatabase.push(data);
-        });
+// --- NEW: BANKING & EDDIES SYSTEM ---
 
-        emailDatabase.sort((a, b) => b.timestamp - a.timestamp);
+function openBank() {
+    document.getElementById('bank-modal').classList.remove('hidden');
+}
 
-        if (document.getElementById('messages-view').style.display !== 'none') {
-            renderEmailList();
+function closeBank() {
+    document.getElementById('bank-modal').classList.add('hidden');
+}
+
+function initBankWiretap() {
+    const userDocRef = db.collection('users').doc(myEmail);
+    
+    // Real-time listener for balance updates
+    userDocRef.onSnapshot(doc => {
+        if (doc.exists) {
+            currentFunds = doc.data().balance;
+            updateBankUI();
+        } else {
+            // Give new users a 1000 €$ Starter Pack
+            userDocRef.set({ balance: 1000 }).catch(e => console.error(e));
         }
     });
+}
 
-// Folder & UI Functions
+function updateBankUI() {
+    const displayString = `${currentFunds.toLocaleString()} €$`;
+    const topDisplay = document.getElementById('user-funds-display');
+    const bankDisplay = document.getElementById('bank-main-balance');
+    
+    if (topDisplay) topDisplay.innerText = displayString;
+    if (bankDisplay) bankDisplay.innerText = displayString;
+}
+
+
+// --- REAL-TIME CLOUD EMAIL SYSTEM ---
+let emailDatabase = [];
+let currentFolder = 'inbox';
+
+function initEmailWiretap() {
+    db.collection("emails")
+        .where("participants", "array-contains", myEmail)
+        .onSnapshot((snapshot) => {
+            emailDatabase = [];
+            
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                data.id = doc.id; 
+                data.folder = (data.from === myEmail) ? 'sent' : 'inbox';
+                emailDatabase.push(data);
+            });
+
+            emailDatabase.sort((a, b) => b.timestamp - a.timestamp);
+
+            if (document.getElementById('messages-view').style.display !== 'none') {
+                renderEmailList();
+            }
+        });
+}
+
 function switchFolder(folderName) {
     currentFolder = folderName;
     
@@ -512,8 +490,17 @@ function openSpecificEmail(emailId) {
     document.getElementById('read-subject').innerText = email.subject;
     document.getElementById('read-from').innerText = `FROM: ${email.from}`;
     document.getElementById('read-to').innerText = `TO: ${email.to}`;
-    document.getElementById('read-body').innerHTML = email.body.replace(/\n/g, '<br>');
     
+    // Display if funds were attached to this message
+    let finalBodyHTML = email.body.replace(/\n/g, '<br>');
+    if (email.attachedFunds > 0) {
+        finalBodyHTML = `<div style="color: #ffcc00; border: 1px dashed #ffcc00; padding: 10px; margin-bottom: 15px;">
+            <strong>[ENCRYPTED TRANSACTION DETECTED]</strong><br>
+            FUNDS TRANSFERRED: ${email.attachedFunds.toLocaleString()} €$
+        </div>` + finalBodyHTML;
+    }
+    
+    document.getElementById('read-body').innerHTML = finalBodyHTML;
     renderEmailList();
 }
 
@@ -525,37 +512,71 @@ function openCompose() {
     document.getElementById('compose-to').value = '';
     document.getElementById('compose-subject').value = '';
     document.getElementById('compose-body').value = '';
+    document.getElementById('compose-eddies').value = '';
 }
 
-function sendOutboundEmail() {
+async function sendOutboundEmail() {
     const toField = document.getElementById('compose-to').value.trim().toLowerCase();
     const subjectField = document.getElementById('compose-subject').value.trim();
     const bodyField = document.getElementById('compose-body').value.trim();
+    const transferAmount = parseInt(document.getElementById('compose-eddies').value) || 0;
     
     if (toField === '' || bodyField === '') {
         alert("[SYSTEM ERROR] Cannot transmit. Missing recipient or datastream.");
         return;
     }
+
+    if (transferAmount > currentFunds) {
+        alert("[BANK ERROR] Insufficient funds. You don't have enough eddies.");
+        return;
+    }
     
-    const activeUserEmail = localStorage.getItem('cybernetEmail') || "unknown@cybernet.com";
-    
-    db.collection("emails").add({
-        from: activeUserEmail,
-        to: toField,
-        participants: [activeUserEmail, toField],
-        subject: subjectField !== '' ? subjectField : '<NO SUBJECT>',
-        body: bodyField,
-        timestamp: Date.now(),
-        read: false
-    })
-    .then(() => {
-        alert(`[TRANSMISSION SUCCESSFUL]\nDatashard routed to: ${toField}`);
+    try {
+        // Secure transaction logic if eddies are attached
+        if (transferAmount > 0) {
+            const senderRef = db.collection('users').doc(myEmail);
+            const receiverRef = db.collection('users').doc(toField);
+
+            await db.runTransaction(async (transaction) => {
+                const senderDoc = await transaction.get(senderRef);
+                const receiverDoc = await transaction.get(receiverRef);
+
+                let senderBalance = senderDoc.exists ? senderDoc.data().balance : 1000;
+                let receiverBalance = receiverDoc.exists ? receiverDoc.data().balance : 1000;
+
+                if (senderBalance < transferAmount) {
+                    throw "Insufficient funds";
+                }
+
+                transaction.set(senderRef, { balance: senderBalance - transferAmount }, { merge: true });
+                transaction.set(receiverRef, { balance: receiverBalance + transferAmount }, { merge: true });
+            });
+        }
+
+        // Add to email database
+        await db.collection("emails").add({
+            from: myEmail,
+            to: toField,
+            participants: [myEmail, toField],
+            subject: subjectField !== '' ? subjectField : '<NO SUBJECT>',
+            body: bodyField,
+            timestamp: Date.now(),
+            read: false,
+            attachedFunds: transferAmount
+        });
+
+        if (transferAmount > 0) {
+            alert(`[TRANSMISSION SUCCESSFUL]\nDatashard and ${transferAmount} €$ routed to: ${toField}`);
+        } else {
+            alert(`[TRANSMISSION SUCCESSFUL]\nDatashard routed to: ${toField}`);
+        }
+        
         switchFolder('sent');
-    })
-    .catch((error) => {
-        console.error("Error writing document: ", error);
+
+    } catch (error) {
+        console.error("Error processing request: ", error);
         alert("[SYSTEM OVERLOAD] Connection to server failed.");
-    });
+    }
 }
 
 // ==========================================
@@ -576,7 +597,6 @@ const rtcConfig = {
     ]
 };
 
-// --- CUSTOM DIALER PROMPT ---
 function openCallPrompt() {
     document.getElementById('call-target-input').value = '';
     document.getElementById('call-prompt-modal').classList.remove('hidden');
@@ -603,7 +623,7 @@ async function submitCallAlias() {
     currentCallId = callDoc.id;
 
     peerConnection = new RTCPeerConnection(rtcConfig);
-    setupPeerConnection(callDoc, true); // TRUE: We are the caller
+    setupPeerConnection(callDoc, true); 
 
     const offerDescription = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offerDescription);
@@ -632,23 +652,23 @@ async function submitCallAlias() {
     listenForCallEnd(currentCallId);
 }
 
-// --- THE WIRETAP (Incoming Call Listener) ---
-db.collection('calls').where('targetEmail', '==', myEmail).where('status', '==', 'ringing')
-    .onSnapshot(snapshot => {
-        snapshot.docChanges().forEach(change => {
-            if (change.type === 'added') {
-                const callData = change.doc.data();
-                currentCallId = change.doc.id;
-                
-                showHolocallUI("INCOMING CALL", callData.callerEmail, true);
-                ringtoneAudio.play().catch(e => console.log("Autoplay blocked by browser. User must interact with screen first."));
-                
-                listenForCallEnd(currentCallId);
-            }
+function initCallWiretap() {
+    db.collection('calls').where('targetEmail', '==', myEmail).where('status', '==', 'ringing')
+        .onSnapshot(snapshot => {
+            snapshot.docChanges().forEach(change => {
+                if (change.type === 'added') {
+                    const callData = change.doc.data();
+                    currentCallId = change.doc.id;
+                    
+                    showHolocallUI("INCOMING CALL", callData.callerEmail, true);
+                    ringtoneAudio.play().catch(e => console.log("Autoplay blocked."));
+                    
+                    listenForCallEnd(currentCallId);
+                }
+            });
         });
-    });
+}
 
-// --- UI CONTROLS ---
 function showHolocallUI(statusText, aliasText, isIncoming) {
     document.getElementById('holocall-status').innerText = statusText;
     document.getElementById('holocall-status').classList.add('blink-text');
@@ -681,7 +701,7 @@ async function answerCall() {
     document.getElementById('local-audio').srcObject = localStream;
 
     peerConnection = new RTCPeerConnection(rtcConfig);
-    setupPeerConnection(callDoc, false); // FALSE: We are the receiver
+    setupPeerConnection(callDoc, false);
 
     const offerDescription = callData.offer;
     await peerConnection.setRemoteDescription(new RTCSessionDescription(offerDescription));
@@ -694,7 +714,6 @@ async function answerCall() {
     await callDoc.update({ answer: answer, status: 'answered' });
 }
 
-// --- DISCONNECT LOGIC ---
 async function declineCall() {
     if (currentCallId) {
         await db.collection('calls').doc(currentCallId).delete().catch(e => console.error(e));
@@ -731,7 +750,6 @@ function stopCallCleanup() {
     currentCallId = null;
 }
 
-// --- WEBRTC CONNECTION HELPER ---
 function setupPeerConnection(callDoc, isCaller) {
     localStream.getTracks().forEach(track => {
         peerConnection.addTrack(track, localStream);

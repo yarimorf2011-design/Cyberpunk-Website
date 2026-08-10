@@ -921,3 +921,48 @@ body {
     color: #ff2a2a;
 }
 .reject-btn:hover { background: #ff2a2a; color: #000; box-shadow: 0 0 10px #ff2a2a;}
+
+/* =========================================
+   --- MILITECH BANKING & EDDIES SYSTEM ---
+   ========================================= */
+
+/* 1. Bank App Grid Icon */
+#icon-Bank {
+    background-color: #ffcc00; /* Fallback gold color */
+    /* Add a custom bank icon to your assets folder if you want! */
+    background-image: url('assets/BankIcon.png'); 
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+}
+
+#icon-Bank:hover {
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.8);
+}
+
+/* 2. Hide ugly default browser arrows on the Eddies number input */
+#compose-eddies::-webkit-inner-spin-button,
+#compose-eddies::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+#compose-eddies {
+    -moz-appearance: textfield; /* Fix for Firefox */
+}
+
+/* 3. Custom Gold Focus Glow for the Eddies input */
+#compose-eddies:focus {
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.4) inset !important;
+    outline: none;
+}
+
+/* 4. Secure Transaction Receipt Styling in Emails */
+.transaction-receipt {
+    color: #ffcc00;
+    border: 1px dashed #ffcc00;
+    padding: 12px;
+    margin-bottom: 20px;
+    background: rgba(255, 204, 0, 0.05);
+    font-family: monospace;
+    text-shadow: 0 0 5px rgba(255, 204, 0, 0.3);
+}

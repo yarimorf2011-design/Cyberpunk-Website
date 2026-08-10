@@ -10,7 +10,7 @@
     <div class="scanlines"></div>
 
     <div class="os-container">
-		<nav class="top-nav">
+        <nav class="top-nav">
             <div class="tab" id="tab-msg" onclick="switchView('messages')">MESSAGES</div>
             <div class="tab active" id="tab-net" onclick="switchView('net')">NET</div>
         </nav>
@@ -24,6 +24,8 @@
                 <div class="url">NETDIR://NCITY.PUB</div>
                 <div class="system-info">
                     USER: <span id="user-email-display" style="color: var(--cyan); margin-right: 15px;">UNREGISTERED</span>
+                    <!-- NEW: Golden Eddies Display -->
+                    FUNDS: <span id="user-funds-display" style="color: #ffcc00; margin-right: 15px; font-weight: bold;">0 €$</span>
                     POWERED BY NETWATCH
                 </div>
             </header>
@@ -58,14 +60,20 @@
                     <div class="app-icon" id="icon-crystal"></div>
                     <span class="app-label">CRYSTAL<br>PALACE</span>
                 </div>
+
+                <!-- NEW: Bank App Icon -->
+                <div class="app-item" onclick="openBank()">
+                    <div class="app-icon" id="icon-Bank"></div>
+                    <span class="app-label">BANK</span>
+                </div>
                 
             </div>
 
-		<div id="messages-view" class="messages-container" style="display: none;">
+        <div id="messages-view" class="messages-container" style="display: none;">
                 
                 <div class="mail-sidebar">
                     <button class="compose-btn" onclick="openCompose()">+ NEW MESSAGE</button>
-						<button class="compose-btn" style="border-color: #ffcc00; color: #ffcc00;" onclick="openCallPrompt()">[ VOICELINK ]</button>
+                        <button class="compose-btn" style="border-color: #ffcc00; color: #ffcc00;" onclick="openCallPrompt()">[ VOICELINK ]</button>
                     <div class="mail-folder active" id="folder-inbox" onclick="switchFolder('inbox')">📥 INBOX</div>
                     <div class="mail-folder" id="folder-sent" onclick="switchFolder('sent')">📤 SENT</div>
                 </div>
@@ -94,6 +102,10 @@
                         <h2 style="color: var(--cyan); border-bottom: 1px solid var(--cyan); padding-bottom: 10px; margin-bottom: 20px;">COMPOSE MESSAGE</h2>
                         <input type="text" id="compose-to" class="compose-input" placeholder="TO: (e.g., target@arasaka.corp)">
                         <input type="text" id="compose-subject" class="compose-input" placeholder="SUBJECT:">
+                        
+                        <!-- NEW: Attach Eddies Input -->
+                        <input type="number" id="compose-eddies" class="compose-input" placeholder="ATTACH FUNDS: 0 €$ (Optional)" min="0" style="border-color: #ffcc00; color: #ffcc00;">
+                        
                         <textarea id="compose-body" class="compose-textarea" placeholder="Input datastream here..."></textarea>
                         <button class="send-btn" style="margin-left: 0; margin-top: 10px;" onclick="sendOutboundEmail()">TRANSMIT</button>
                     </div>
@@ -103,6 +115,7 @@
         </main>
     </div>
 
+    <!-- EXISTING MODALS (Radio, Chat, Weather) -->
     <div id="radio-modal" class="radio-modal hidden">
         <div class="radio-window">
             <div class="radio-header">RADIOPORT</div>
@@ -187,8 +200,38 @@
             </div>
         </div>
     </div>
+
+    <!-- NEW: BANK MODAL -->
+    <div id="bank-modal" class="weather-modal hidden">
+        <div class="weather-window" style="border-color: #ffcc00; box-shadow: 0 0 15px rgba(255, 204, 0, 0.2);">
+            <div class="weather-header" style="background: #ffcc00; color: #000;">
+                <span>🏦 MILITECH FINANCIAL UPLINK</span>
+                <button class="close-btn-bio" onclick="closeBank()" style="color: #000; border-color: #000;">[X]</button>
+            </div>
+            
+            <div class="weather-content">
+                <div class="weather-main">
+                    <div class="location-tag" style="color: #ffcc00;">ACCOUNT STATUS: ACTIVE</div>
+                    <div id="bank-main-balance" class="temp-display" style="color: #ffcc00; text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);">0 €$</div>
+                    <div class="condition-display" style="color: #fff;">AVAILABLE FUNDS</div>
+                </div>
+                
+                <div class="weather-stats" style="border-top: 1px solid #ffcc00;">
+                    <div class="stat-box">
+                        <div class="stat-label" style="color: #ffcc00;">ROUTING</div>
+                        <div class="stat-value">SECURE</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label" style="color: #ffcc00;">ENCRYPTION</div>
+                        <div class="stat-value">AES-256</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
-	<audio id="remote-audio" autoplay></audio>
+    <!-- VOICELINK AND SETUP MODALS -->
+    <audio id="remote-audio" autoplay></audio>
     <audio id="local-audio" autoplay muted></audio>
 
     <div id="call-prompt-modal" class="setup-modal hidden" style="z-index: 10000;">
@@ -228,7 +271,7 @@
         </div>
 
     </div>
-	
+    
     <div id="setup-modal" class="setup-modal hidden">
         <div class="setup-window">
             <div class="setup-header">SYSTEM INITIALIZATION</div>
@@ -242,12 +285,10 @@
             </div>
         </div>
     </div>
-	<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    
+    <!-- SCRIPTS -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-    <script src="script.js"></script>
-</body>
-</html>
     <script src="script.js"></script>
 </body>
 </html>
