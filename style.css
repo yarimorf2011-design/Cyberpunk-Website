@@ -928,16 +928,15 @@ body {
 
 /* 1. Bank App Grid Icon */
 #icon-Bank {
-    background-color: #ffcc00; /* Fallback gold color */
+    background-color: #00f7ff; /* Fallback gold color */
     /* Add a custom bank icon to your assets folder if you want! */
     background-image: url('assets/BankIcon.png'); 
     background-size: cover;
     background-position: center;
-    box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
 }
 
 #icon-Bank:hover {
-    box-shadow: 0 0 20px rgba(255, 204, 0, 0.8);
+    box-shadow: 0 0 20px rgba(80, 255, 240, 0.8);
 }
 
 /* 2. Hide ugly default browser arrows on the Eddies number input */
