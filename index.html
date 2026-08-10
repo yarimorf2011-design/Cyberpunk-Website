@@ -98,11 +98,11 @@
 
                     <div id="compose-view" class="compose-container" style="display: none;">
                         <h2 style="color: var(--cyan); border-bottom: 1px solid var(--cyan); padding-bottom: 10px; margin-bottom: 20px;">COMPOSE MESSAGE</h2>
-                        <input type="text" id="compose-to" class="compose-input" placeholder="TO: (e.g., target@arasaka.corp)">
-                        <input type="text" id="compose-subject" class="compose-input" placeholder="SUBJECT:">
+                        <input type="text" id="compose-to" class="compose-input" placeholder="TO: (e.g., target@arasaka.corp)" autocomplete="off">
+                        <input type="text" id="compose-subject" class="compose-input" placeholder="SUBJECT:" autocomplete="off">
                         
                         <!-- NEW: Attach Eddies Input -->
-                        <input type="number" id="compose-eddies" class="compose-input" placeholder="ATTACH FUNDS: 0 €$ (Optional)" min="0" style="border-color: #ffcc00; color: #ffcc00;">
+                        <input type="number" id="compose-eddies" class="compose-input" placeholder="ATTACH FUNDS: 0 €$ (Optional)" min="0" style="border-color: #ffcc00; color: #ffcc00;" autocomplete="off">
                         
                         <textarea id="compose-body" class="compose-textarea" placeholder="Input datastream here..."></textarea>
                         <button class="send-btn" style="margin-left: 0; margin-top: 10px;" onclick="sendOutboundEmail()">TRANSMIT</button>
@@ -161,7 +161,7 @@
 
             <div class="chat-input-area">
                 <span class="prompt-arrow">></span>
-                <input type="text" id="chat-input" placeholder="Enter query..." onkeypress="handleChatEnter(event)">
+                <input type="text" id="chat-input" placeholder="Enter query..." onkeypress="handleChatEnter(event)" autocomplete="off">
                 <button onclick="sendChatMessage()" class="send-btn">TRANSMIT</button>
             </div>
         </div>
@@ -239,7 +239,7 @@
                 <p style="margin-bottom: 15px; color: #ffcc00;">ENTER TARGET ALIAS TO CALL:</p>
                 <div class="chat-input-area" style="border-color: #ffcc00;">
                     <span class="prompt-arrow" style="color: #ffcc00;">></span>
-                    <input type="text" id="call-target-input" placeholder="e.g., target@cybernet.com" style="color: #ffcc00; outline: none; background: transparent; border: none; flex-grow: 1; font-family: inherit;">
+                    <input type="text" id="call-target-input" placeholder="e.g., target@cybernet.com" style="color: #ffcc00; outline: none; background: transparent; border: none; flex-grow: 1; font-family: inherit;" autocomplete="off">
                     <button onclick="submitCallAlias()" class="send-btn" style="color: #ffcc00; border-color: #ffcc00;">DIAL</button>
                     <button onclick="closeCallPrompt()" class="send-btn" style="margin-left: 5px;">CANCEL</button>
                 </div>
@@ -277,7 +277,7 @@
                 <p style="margin-bottom: 15px; color: #fff;">NEW USER DETECTED. PLEASE ENTER YOUR ALIAS TO GENERATE A SECURE CYBERNET ADDRESS.</p>
                 <div class="chat-input-area">
                     <span class="prompt-arrow">></span>
-                    <input type="text" id="username-input" placeholder="Enter alias..." onkeypress="handleSetupEnter(event)">
+                    <input type="text" id="username-input" placeholder="Enter alias..." onkeypress="handleSetupEnter(event)" autocomplete="off">
                     <button onclick="registerUser()" class="send-btn">REGISTER</button>
                 </div>
             </div>
