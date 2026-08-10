@@ -6,6 +6,11 @@
     <title>Keystone OS - Arasaka Intranet</title>
     <link rel="stylesheet" href="style.css">
 </head>
+<!-- MASSIVE TRANSACTION OVERLAY -->
+<div id="transaction-overlay" class="transaction-overlay hidden">
+    <span id="transaction-text"></span>
+</div>
+
 <body>
     <div class="scanlines"></div>
 
@@ -22,11 +27,14 @@
                     <span class="icon">⬢</span> KEYSTONE
                 </div>
                 <div class="url">NETDIR://NCITY.PUB</div>
-                <div class="system-info">
-                    USER: <span id="user-email-display" style="color: var(--cyan); margin-right: 15px;">UNREGISTERED</span>
-                    <!-- NEW: Golden Eddies Display -->
-                    FUNDS: <span id="user-funds-display" style="color: #ffcc00; margin-right: 15px; font-weight: bold;">0 €$</span>
-                    POWERED BY NETWATCH
+                
+                <!-- RESTRUCTURED SYSTEM INFO -->
+                <div class="system-info" style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.4;">
+                    <div id="user-funds-display" class="funds-glow">0 €$</div>
+                    <div>
+                        USER: <span id="user-email-display" style="color: var(--cyan); margin-right: 15px;">UNREGISTERED</span>
+                        POWERED BY NETWATCH
+                    </div>
                 </div>
             </header>
 

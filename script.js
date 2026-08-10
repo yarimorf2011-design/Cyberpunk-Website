@@ -376,28 +376,86 @@ function closeBank() {
     document.getElementById('bank-modal').classList.add('hidden');
 }
 
+// --- NEW REAL-TIME BANKING ANIMATIONS ---
 function initBankWiretap() {
     const userDocRef = db.collection('users').doc(myEmail);
     
-    // Real-time listener for balance updates
     userDocRef.onSnapshot(doc => {
         if (doc.exists) {
-            currentFunds = doc.data().balance;
-            updateBankUI();
+            const newBalance = doc.data().balance;
+            
+            // If funds exist and have changed, trigger the holographic animations
+            if (currentFunds !== null && currentFunds !== newBalance) {
+                const difference = newBalance - currentFunds;
+                animateTransactionOverlay(difference);
+                animateCounter(currentFunds, newBalance);
+            } else if (currentFunds === null) {
+                // Initial boot-up: just set the numbers without animating
+                document.getElementById('user-funds-display').innerText = `${newBalance.toLocaleString()} €$`;
+                if(document.getElementById('bank-main-balance')) {
+                    document.getElementById('bank-main-balance').innerText = `${newBalance.toLocaleString()} €$`;
+                }
+            }
+            
+            currentFunds = newBalance;
         } else {
-            // Give new users a 1000 €$ Starter Pack
             userDocRef.set({ balance: 1000 }).catch(e => console.error(e));
         }
     });
 }
 
-function updateBankUI() {
-    const displayString = `${currentFunds.toLocaleString()} €$`;
+function animateCounter(startVal, endVal) {
     const topDisplay = document.getElementById('user-funds-display');
     const bankDisplay = document.getElementById('bank-main-balance');
+    const duration = 1500; // 1.5 second counting animation
+    const startTime = performance.now();
     
-    if (topDisplay) topDisplay.innerText = displayString;
-    if (bankDisplay) bankDisplay.innerText = displayString;
+    function updateCounter(currentTime) {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        
+        // Easing calculation for smooth slowing down effect
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const currentDisplayVal = Math.floor(startVal + (endVal - startVal) * easeProgress);
+        
+        const displayString = `${currentDisplayVal.toLocaleString()} €$`;
+        if (topDisplay) topDisplay.innerText = displayString;
+        if (bankDisplay) bankDisplay.innerText = displayString;
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateCounter);
+        } else {
+            // Guarantee it ends on the exact correct number
+            const finalString = `${endVal.toLocaleString()} €$`;
+            if (topDisplay) topDisplay.innerText = finalString;
+            if (bankDisplay) bankDisplay.innerText = finalString;
+        }
+    }
+    requestAnimationFrame(updateCounter);
+}
+
+function animateTransactionOverlay(difference) {
+    const overlay = document.getElementById('transaction-overlay');
+    const textElement = document.getElementById('transaction-text');
+    
+    // Reset previous animation classes
+    textElement.className = '';
+    
+    if (difference > 0) {
+        textElement.innerText = `+${difference.toLocaleString()} €$`;
+        textElement.classList.add('transact-up');
+    } else {
+        // Negative sign is automatically included in the number
+        textElement.innerText = `${difference.toLocaleString()} €$`; 
+        textElement.classList.add('transact-down');
+    }
+    
+    overlay.classList.remove('hidden');
+    
+    // Auto-hide the overlay after the 2-second CSS animation ends
+    setTimeout(() => {
+        overlay.classList.add('hidden');
+    }, 2000);
 }
 
 

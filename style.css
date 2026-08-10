@@ -965,3 +965,69 @@ body {
     font-family: monospace;
     text-shadow: 0 0 5px rgba(255, 204, 0, 0.3);
 }
+
+/* --- EDDIES UI & ANIMATIONS --- */
+.funds-glow {
+    color: #ffcc00;
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-shadow: 0 0 10px #ffcc00, 0 0 20px rgba(255, 204, 0, 0.8);
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+}
+
+.transaction-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4); /* Darkens the screen slightly */
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none; /* Clicks pass through it */
+    transition: opacity 0.3s ease;
+}
+
+.transaction-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.transaction-overlay span {
+    font-size: 6rem;
+    font-weight: bold;
+    font-family: monospace;
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+}
+
+/* Gaining Eddies */
+.transact-up {
+    color: #33ff33;
+    text-shadow: 0 0 20px #33ff33, 0 0 40px #33ff33;
+    animation: popUpwards 2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}
+
+/* Losing Eddies */
+.transact-down {
+    color: #ff2a2a;
+    text-shadow: 0 0 20px #ff2a2a, 0 0 40px #ff2a2a;
+    animation: dropDownwards 2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes popUpwards {
+    0% { opacity: 0; transform: translateY(50px) scale(0.5); }
+    20% { opacity: 1; transform: translateY(-20px) scale(1.1); }
+    80% { opacity: 1; transform: translateY(-40px) scale(1); }
+    100% { opacity: 0; transform: translateY(-100px) scale(1); }
+}
+
+@keyframes dropDownwards {
+    0% { opacity: 0; transform: translateY(-50px) scale(0.5); }
+    20% { opacity: 1; transform: translateY(20px) scale(1.1); }
+    80% { opacity: 1; transform: translateY(40px) scale(1); }
+    100% { opacity: 0; transform: translateY(100px) scale(1); }
+}
