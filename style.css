@@ -1,0 +1,923 @@
+/* --- Global Reset & Variables --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --cyan: #00f0ff;
+    --dark-cyan: #005f66;
+    --bg-color: #03080a;
+    --glow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--cyan);
+    font-family: 'Courier New', Courier, monospace; /* Monospace for that terminal feel */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    /* Custom angular cursor */
+    cursor: url("assets/Normal select.cur"), auto; 
+}
+
+/* --- CRT Scanline Effect --- */
+.scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 4px, 3px 100%;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* --- Main Layout --- */
+.os-container {
+    width: 90%;
+    max-width: 1200px;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 10;
+}
+
+/* --- Top Navigation Tabs --- */
+.top-nav {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 10px 40px;
+    border: 1px solid var(--dark-cyan);
+    color: var(--dark-cyan);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+.tab:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    text-shadow: var(--glow);
+}
+
+.tab.active {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    text-shadow: var(--glow);
+    box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+/* --- Main Window --- */
+.main-window {
+    border: 2px solid var(--cyan);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+    position: relative;
+}
+
+/* Inner border lines */
+.main-window::before {
+    content: '';
+    position: absolute;
+    top: 5px; left: 5px; right: 5px; bottom: 5px;
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    pointer-events: none;
+}
+
+/* Header Bar */
+.window-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: rgba(0, 240, 255, 0.1);
+    border-bottom: 2px solid var(--cyan);
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.url {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.system-info {
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+/* Sub Header */
+.sub-header {
+    padding: 15px 30px;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* --- App Grid --- */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 30px;
+    padding: 40px;
+    align-content: start;
+    flex-grow: 1;
+}
+
+.app-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    text-align: center;
+}
+
+.app-item:hover {
+    transform: scale(1.05);
+	
+}
+
+.app-item:hover .app-icon {
+    box-shadow: 0 0 15px var(--cyan);
+    border-color: var(--cyan);
+}
+
+.app-icon {
+    width: 100px;
+    height: 100px;
+    border: 1px solid var(--dark-cyan);
+    margin-bottom: 15px;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(0, 240, 255, 0.05); /* Placeholder background */
+    transition: all 0.3s;
+}
+
+.app-label {
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
+}
+
+/* =========================================
+   ADD YOUR IMAGES HERE
+========================================= */
+#icon-Radio { background-image: url('assets/RadioIcon.png'); }
+#icon-Search { background-image: url('assets/SearchIcon.png'); }
+#icon-Weather { background-image: url('assets/WeatherIcon.png'); }
+#icon-hlas    { background-image: url('path/to/hlas.png'); }
+#icon-crystal { background-image: url('path/to/crystal.png'); }
+
+
+
+/* --- RADIOPORT MODAL --- */
+.radio-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(10, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.radio-modal.hidden {
+    display: none;
+}
+
+.radio-window {
+    width: 600px;
+    background: #080202;
+    border: 1px solid #ff2a2a;
+    box-shadow: 0 0 20px rgba(255, 42, 42, 0.2);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.radio-header {
+    background: rgba(255, 42, 42, 0.1);
+    color: var(--cyan);
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-bottom: 1px solid #ff2a2a;
+    letter-spacing: 2px;
+}
+
+.radio-content {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+    border-bottom: 1px solid rgba(255, 42, 42, 0.3);
+}
+
+.radio-art-container {
+    width: 150px;
+    height: 150px;
+    border: 1px solid rgba(255, 42, 42, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+	min-width: 150px;
+    max-width: 150px;
+    flex-shrink: 0; 
+    
+    /* Keep any images that are too big from spilling outside the box */
+    overflow: hidden;
+}
+
+.radio-art {
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* Default logo color trick */
+    background-color: rgba(0, 240, 255, 0.1);
+}
+
+.radio-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.now-playing-label {
+    color: #ff2a2a;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.now-playing-title {
+    color: #ff4d4d;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-shadow: 0 0 5px rgba(255, 77, 77, 0.5);
+}
+
+.volume-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #ff4d4d;
+}
+
+.vol-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.vol-buttons button {
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 5px 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.vol-buttons button:hover {
+    background: rgba(0, 240, 255, 0.2);
+}
+
+.station-list {
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 10px 20px;
+}
+
+.station-item {
+    padding: 10px;
+    color: var(--cyan);
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    gap: 10px;
+    transition: 0.1s;
+}
+
+.station-item:hover {
+    background: rgba(0, 240, 255, 0.1);
+}
+
+.station-item.active {
+    background: rgba(0, 240, 255, 0.15);
+    border-left: 3px solid var(--cyan);
+    color: #fff;
+    text-shadow: 0 0 5px var(--cyan);
+}
+
+.radio-footer {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(255, 42, 42, 0.3);
+}
+
+.radio-btn {
+    background: transparent;
+    border: none;
+    color: #ff4d4d;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.radio-btn span {
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 2px 8px;
+}
+
+/* --- CHAT MODAL (RED THEME) --- */
+.chat-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(10, 0, 0, 0.85); /* Darker, redder tint */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.chat-modal.hidden {
+    display: none;
+}
+
+.chat-window {
+    width: 700px;
+    height: 500px;
+    background: #080202;
+    border: 1px solid #ff2a2a;
+    box-shadow: 0 0 20px rgba(255, 42, 42, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    background: rgba(255, 42, 42, 0.1);
+    padding: 10px 20px;
+    border-bottom: 1px solid #ff2a2a;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #ff2a2a;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+}
+
+.close-btn:hover {
+    color: #fff;
+    text-shadow: 0 0 5px #ff2a2a;
+}
+
+.chat-history {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    font-size: 0.95rem;
+}
+
+.message {
+    line-height: 1.4;
+}
+
+.user-message {
+    color: #fff;
+    align-self: flex-end;
+    text-align: right;
+    border-right: 2px solid #ff2a2a;
+    padding-right: 10px;
+}
+
+.ai-message {
+    color: #4DF6FF;
+    align-self: flex-start;
+    border-left: 2px solid #ff2a2a;
+    padding-left: 10px;
+    text-shadow: 0 0 2px rgba(255, 77, 77, 0.4);
+}
+
+.sender {
+    font-weight: bold;
+    opacity: 0.7;
+    font-size: 0.8rem;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.chat-input-area {
+    display: flex;
+    padding: 15px;
+    border-top: 1px solid rgba(255, 42, 42, 0.3);
+    background: #000;
+    align-items: center;
+}
+
+.prompt-arrow {
+    color: #ff2a2a;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+#chat-input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    color: #ff4d4d;
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+}
+
+.send-btn {
+    background: rgba(255, 42, 42, 0.1);
+    border: 1px solid #ff2a2a;
+    color: #ff2a2a;
+    padding: 5px 15px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    margin-left: 10px;
+    transition: 0.2s;
+}
+
+.send-btn:hover {
+    background: #ff2a2a;
+    color: #000;
+}
+
+
+/* --- BIOTECHNICA WEATHER MODAL --- */
+.weather-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(14,0,0,0.85); /* Dark green tint */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.weather-modal.hidden {
+    display: none;
+}
+
+.weather-window {
+    width: 600px;
+    background: #120000;
+    border: 1px solid #FF0000;
+    box-shadow: 0 0 20px rgba(164,200,255,0.20);
+    display: flex;
+    flex-direction: column;
+}
+
+.weather-header {
+    background: rgba(255,51,51,0.10);
+    padding: 10px 20px;
+    border-bottom: 1px solid #FF0000;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #00DBFF;
+}
+
+.close-btn-bio {
+    background: none;
+    border: none;
+    color: #00DBFF;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+}
+
+.close-btn-bio:hover {
+    color: #fff;
+    text-shadow: 0 0 5px #00DBFF;
+}
+
+.weather-content {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.weather-main {
+    text-align: center;
+    border-bottom: 1px solid rgba(255,0,0,0.30);
+    padding-bottom: 20px;
+}
+
+.location-tag {
+    color: #fff;
+    opacity: 0.7;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.temp-display {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    margin-bottom: 5px;
+}
+
+.condition-display {
+    font-size: 1.5rem;
+    color: #ffcc00; /* Warning yellow */
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0,219,255,0.50);
+    letter-spacing: 1px;
+}
+
+.weather-stats {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.stat-box {
+    background: rgba(255,0,0,0.05);
+    border: 1px solid rgba(255,0,0,0.30);
+    padding: 15px;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #00DBFF;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* App icon background if you have an image for it */
+#icon-bio { background-image: url('path/to/biotechnica.png'); }
+
+/* --- FULL-SCREEN EMAIL CLIENT --- */
+
+.messages-container {
+    /* Uses Flexbox to create a 3-column layout that fills the whole screen */
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+    background: rgba(0, 20, 25, 0.5);
+}
+
+.mail-sidebar {
+    width: 200px;
+    border-right: 1px solid rgba(0, 240, 255, 0.3);
+    padding: 20px 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.mail-folder {
+    padding: 15px 20px;
+    cursor: pointer;
+    color: var(--dark-cyan);
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: 0.2s;
+}
+
+.mail-folder:hover {
+    background: rgba(0, 240, 255, 0.1);
+    color: var(--cyan);
+}
+
+.mail-folder.active {
+    border-left: 3px solid var(--cyan);
+    color: var(--cyan);
+    background: rgba(0, 240, 255, 0.05);
+}
+
+.mail-list {
+    width: 300px;
+    border-right: 1px solid rgba(0, 240, 255, 0.3);
+    overflow-y: auto;
+    background: rgba(0, 5, 10, 0.8);
+}
+
+.mail-item {
+    padding: 15px;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+    cursor: pointer;
+    transition: 0.1s;
+}
+
+.mail-item:hover {
+    background: rgba(0, 240, 255, 0.1);
+}
+
+.mail-item.unread {
+    border-left: 3px solid #ff2a2a;
+}
+
+.mail-sender {
+    font-weight: bold;
+    color: var(--cyan);
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mail-subject {
+    color: #fff;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.mail-preview {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mail-content {
+    flex-grow: 1;
+    padding: 40px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.mail-placeholder {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: var(--dark-cyan);
+    letter-spacing: 2px;
+    font-size: 1.2rem;
+}
+
+.mail-placeholder .icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.mail-body-header {
+    border-bottom: 2px solid var(--cyan);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.mail-body-header h2 {
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+.mail-body-header h4 {
+    color: var(--cyan);
+    font-weight: normal;
+}
+
+.mail-body-text p {
+    color: #ccc;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+}
+
+/* --- SETUP MODAL FIX --- */
+.setup-modal {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: rgba(3, 8, 10, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.setup-modal.hidden {
+    display: none;
+}
+
+.setup-window {
+    width: 500px;
+    background: #000;
+    border: 1px solid var(--cyan);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.setup-header {
+    background: var(--cyan);
+    color: #000;
+    padding: 10px 20px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.setup-content {
+    padding: 30px;
+}
+
+/* --- COMPOSE EMAIL STYLES --- */
+.compose-btn {
+    width: 90%;
+    margin: 0 auto 20px auto;
+    display: block;
+    background: rgba(0, 240, 255, 0.1);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    letter-spacing: 1px;
+}
+
+.compose-btn:hover {
+    background: var(--cyan);
+    color: #000;
+    box-shadow: 0 0 10px var(--cyan);
+}
+
+.compose-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: 100%;
+}
+
+.compose-input, .compose-textarea {
+    background: rgba(0, 5, 10, 0.8);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: #fff;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.2s;
+}
+
+.compose-input:focus, .compose-textarea:focus {
+    border-color: var(--cyan);
+    box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.1);
+}
+
+.compose-textarea {
+    flex-grow: 1;
+    resize: none;
+}
+
+/* --- VOICE COMM STYLES --- */
+.blink-text {
+    animation: blinker 1.5s linear infinite;
+}
+
+@keyframes blinker {
+    50% { opacity: 0; }
+}
+
+/* --- HOLOCALL UI (TOP RIGHT) --- */
+.holocall-container {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 10000;
+}
+
+.holocall-container.hidden {
+    display: none;
+}
+
+.holocall-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border: 2px solid #ff2a2a;
+    box-shadow: 0 0 20px rgba(255, 42, 42, 0.4), inset 0 0 20px rgba(255, 42, 42, 0.4);
+    background: #000;
+    overflow: hidden;
+}
+
+.holocall-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.85;
+}
+
+.holocall-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+.holocall-info {
+    background: rgba(0, 5, 10, 0.9);
+    border: 1px solid var(--cyan);
+    padding: 10px;
+    text-align: center;
+}
+
+.holocall-status {
+    color: #ffcc00;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+}
+
+.holocall-alias {
+    color: #fff;
+    font-size: 0.9rem;
+    word-break: break-all;
+}
+
+.holocall-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.holocall-controls.hidden {
+    display: none;
+}
+
+.holo-btn {
+    flex-grow: 1;
+    padding: 10px;
+    font-family: inherit;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+    letter-spacing: 1px;
+}
+
+.accept-btn {
+    background: rgba(51, 255, 51, 0.1);
+    border: 1px solid #33ff33;
+    color: #33ff33;
+}
+.accept-btn:hover { background: #33ff33; color: #000; box-shadow: 0 0 10px #33ff33;}
+
+.reject-btn {
+    background: rgba(255, 42, 42, 0.1);
+    border: 1px solid #ff2a2a;
+    color: #ff2a2a;
+}
+.reject-btn:hover { background: #ff2a2a; color: #000; box-shadow: 0 0 10px #ff2a2a;}

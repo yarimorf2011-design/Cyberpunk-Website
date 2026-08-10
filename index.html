@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keystone OS - Arasaka Intranet</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="scanlines"></div>
+
+    <div class="os-container">
+		<nav class="top-nav">
+            <div class="tab" id="tab-msg" onclick="switchView('messages')">MESSAGES</div>
+            <div class="tab active" id="tab-net" onclick="switchView('net')">NET</div>
+        </nav>
+
+        <main class="main-window">
+            
+            <header class="window-header">
+                <div class="brand">
+                    <span class="icon">⬢</span> KEYSTONE
+                </div>
+                <div class="url">NETDIR://NCITY.PUB</div>
+                <div class="system-info">
+                    USER: <span id="user-email-display" style="color: var(--cyan); margin-right: 15px;">UNREGISTERED</span>
+                    POWERED BY NETWATCH
+                </div>
+            </header>
+
+            <div class="sub-header">
+                <span class="icon">🪷</span> ARASAKA INTRANET
+            </div>
+
+            <div id="net-view" class="grid-container">
+                
+                <div class="app-item" onclick="openRadio()">
+                    <div class="app-icon" id="icon-Radio"></div>
+                    <span class="app-label">RADIO</span>
+                </div>
+
+                <div class="app-item" onclick="openChat()">
+                    <div class="app-icon" id="icon-Search"></div>
+                    <span class="app-label">SEARCH</span>
+                </div>
+
+                <div class="app-item" onclick="openWeather()">
+                    <div class="app-icon" id="icon-Weather"></div>
+                    <span class="app-label">WEATHER</span>
+                </div>
+
+                <div class="app-item" onclick="launchApp('Hlas Pomoci')">
+                    <div class="app-icon" id="icon-hlas"></div>
+                    <span class="app-label">HLAS POMOCI</span>
+                </div>
+
+                <div class="app-item" onclick="launchApp('Crystal Palace')">
+                    <div class="app-icon" id="icon-crystal"></div>
+                    <span class="app-label">CRYSTAL<br>PALACE</span>
+                </div>
+                
+            </div>
+
+		<div id="messages-view" class="messages-container" style="display: none;">
+                
+                <div class="mail-sidebar">
+                    <button class="compose-btn" onclick="openCompose()">+ NEW MESSAGE</button>
+						<button class="compose-btn" style="border-color: #ffcc00; color: #ffcc00;" onclick="openCallPrompt()">[ VOICELINK ]</button>
+                    <div class="mail-folder active" id="folder-inbox" onclick="switchFolder('inbox')">📥 INBOX</div>
+                    <div class="mail-folder" id="folder-sent" onclick="switchFolder('sent')">📤 SENT</div>
+                </div>
+
+                <div class="mail-list" id="dynamic-mail-list">
+                    </div>
+
+                <div class="mail-content">
+                    
+                    <div id="mail-placeholder" class="mail-placeholder">
+                        <span class="icon">⬢</span><br>
+                        SELECT A DATASHARD TO READ
+                    </div>
+                    
+                    <div id="active-email-view" class="mail-body" style="display: none;">
+                        <div class="mail-body-header">
+                            <h2 id="read-subject">SUBJECT</h2>
+                            <h4 id="read-from">FROM: </h4>
+                            <h4 id="read-to">TO: </h4>
+                        </div>
+                        <div class="mail-body-text" id="read-body">
+                            </div>
+                    </div>
+
+                    <div id="compose-view" class="compose-container" style="display: none;">
+                        <h2 style="color: var(--cyan); border-bottom: 1px solid var(--cyan); padding-bottom: 10px; margin-bottom: 20px;">COMPOSE MESSAGE</h2>
+                        <input type="text" id="compose-to" class="compose-input" placeholder="TO: (e.g., target@arasaka.corp)">
+                        <input type="text" id="compose-subject" class="compose-input" placeholder="SUBJECT:">
+                        <textarea id="compose-body" class="compose-textarea" placeholder="Input datastream here..."></textarea>
+                        <button class="send-btn" style="margin-left: 0; margin-top: 10px;" onclick="sendOutboundEmail()">TRANSMIT</button>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="radio-modal" class="radio-modal hidden">
+        <div class="radio-window">
+            <div class="radio-header">RADIOPORT</div>
+            
+            <div class="radio-content">
+                <div class="radio-art-container">
+                    <div id="radio-art" class="radio-art"></div>
+                </div>
+                
+                <div class="radio-info">
+                    <div class="now-playing-label">NOW PLAYING</div>
+                    <div id="now-playing-title" class="now-playing-title">---</div>
+                    
+                    <div class="volume-controls">
+                        <span>VOLUME</span>
+                        <div class="vol-buttons">
+                            <button id="vol-down" onclick="adjustVolume(-0.1)">A</button>
+                            <span id="vol-display">100%</span>
+                            <button id="vol-up" onclick="adjustVolume(0.1)">D</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="station-list" class="station-list"></div>
+
+            <div class="radio-footer">
+                <button class="radio-btn" onclick="closeRadio()"><span>C</span> CLOSE</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="chat-modal" class="chat-modal hidden">
+        <div class="chat-window">
+            <div class="chat-header">
+                <span style="color: #ff2a2a;">⬢ NETWATCH OVERSEER AI</span>
+                <button class="close-btn" onclick="closeChat()">[X]</button>
+            </div>
+            
+            <div id="chat-history" class="chat-history">
+                <div class="message ai-message">
+                    <span class="sender">OVERSEER:</span> Connection established. State your query, user.
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <span class="prompt-arrow">></span>
+                <input type="text" id="chat-input" placeholder="Enter query..." onkeypress="handleChatEnter(event)">
+                <button onclick="sendChatMessage()" class="send-btn">TRANSMIT</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="weather-modal" class="weather-modal hidden">
+        <div class="weather-window">
+            <div class="weather-header">
+                <span><span style="color: #FFFFFF;">☣</span> BIOTECHNICA LOCAL SENSORS</span>
+                <button class="close-btn-bio" onclick="closeWeather()">[X]</button>
+            </div>
+            
+            <div class="weather-content">
+                <div class="weather-main">
+                    <div class="location-tag">SECTOR: CITY CENTER</div>
+                    <div id="temp-display" class="temp-display">--°C</div>
+                    <div id="condition-display" class="condition-display">SCANNING...</div>
+                </div>
+                
+                <div class="weather-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">TOXICITY (AQI)</div>
+                        <div id="aqi-display" class="stat-value">--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">SOLAR RADS</div>
+                        <div id="rad-display" class="stat-value">--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">ACID RAIN PROB.</div>
+                        <div id="rain-display" class="stat-value">--%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+	<audio id="remote-audio" autoplay></audio>
+    <audio id="local-audio" autoplay muted></audio>
+
+    <div id="call-prompt-modal" class="setup-modal hidden" style="z-index: 10000;">
+        <div class="setup-window" style="border-color: #ffcc00; box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);">
+            <div class="setup-header" style="background: #ffcc00; color: #000;">INITIATE VOICELINK</div>
+            <div class="setup-content">
+                <p style="margin-bottom: 15px; color: #ffcc00;">ENTER TARGET ALIAS TO CALL:</p>
+                <div class="chat-input-area" style="border-color: #ffcc00;">
+                    <span class="prompt-arrow" style="color: #ffcc00;">></span>
+                    <input type="text" id="call-target-input" placeholder="e.g., target@cybernet.com" style="color: #ffcc00; outline: none; background: transparent; border: none; flex-grow: 1; font-family: inherit;">
+                    <button onclick="submitCallAlias()" class="send-btn" style="color: #ffcc00; border-color: #ffcc00;">DIAL</button>
+                    <button onclick="closeCallPrompt()" class="send-btn" style="margin-left: 5px;">CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="holocall-ui" class="holocall-container hidden">
+        
+        <div class="holocall-frame">
+            <img src="assets/CallingImage.jpg" alt="Caller ID" class="holocall-image">
+            <div class="holocall-overlay scanlines"></div>
+        </div>
+        
+        <div class="holocall-info">
+            <div id="holocall-status" class="holocall-status blink-text">INCOMING CALL</div>
+            <div id="holocall-alias" class="holocall-alias">unknown@cybernet.com</div>
+        </div>
+
+        <div id="holocall-incoming-controls" class="holocall-controls">
+            <button onclick="answerCall()" class="holo-btn accept-btn">ACCEPT</button>
+            <button onclick="declineCall()" class="holo-btn reject-btn">DECLINE</button>
+        </div>
+        
+        <div id="holocall-active-controls" class="holocall-controls hidden">
+            <button onclick="hangUp()" class="holo-btn reject-btn">DISCONNECT</button>
+        </div>
+
+    </div>
+	
+    <div id="setup-modal" class="setup-modal hidden">
+        <div class="setup-window">
+            <div class="setup-header">SYSTEM INITIALIZATION</div>
+            <div class="setup-content">
+                <p style="margin-bottom: 15px; color: #fff;">NEW USER DETECTED. PLEASE ENTER YOUR ALIAS TO GENERATE A SECURE CYBERNET ADDRESS.</p>
+                <div class="chat-input-area">
+                    <span class="prompt-arrow">></span>
+                    <input type="text" id="username-input" placeholder="Enter alias..." onkeypress="handleSetupEnter(event)">
+                    <button onclick="registerUser()" class="send-btn">REGISTER</button>
+                </div>
+            </div>
+        </div>
+    </div>
+	<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>
+    <script src="script.js"></script>
+</body>
+</html>
