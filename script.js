@@ -574,7 +574,13 @@ function openCompose() {
 }
 
 async function sendOutboundEmail() {
-    const toField = document.getElementById('compose-to').value.trim().toLowerCase();
+    let toField = document.getElementById('compose-to').value.trim().toLowerCase();
+    
+    // --- NEW: Auto-complete the domain if it's missing ---
+    if (toField !== '' && !toField.includes('@')) {
+        toField = toField + '@cybernet.com';
+    }
+
     const subjectField = document.getElementById('compose-subject').value.trim();
     const bodyField = document.getElementById('compose-body').value.trim();
     const transferAmount = parseInt(document.getElementById('compose-eddies').value) || 0;
@@ -590,7 +596,6 @@ async function sendOutboundEmail() {
     }
     
     try {
-        // Secure transaction logic if eddies are attached
         if (transferAmount > 0) {
             const senderRef = db.collection('users').doc(myEmail);
             const receiverRef = db.collection('users').doc(toField);
@@ -611,7 +616,6 @@ async function sendOutboundEmail() {
             });
         }
 
-        // Add to email database
         await db.collection("emails").add({
             from: myEmail,
             to: toField,
@@ -666,7 +670,13 @@ function closeCallPrompt() {
 }
 
 async function submitCallAlias() {
-    const target = document.getElementById('call-target-input').value.toLowerCase().trim();
+    let target = document.getElementById('call-target-input').value.toLowerCase().trim();
+    
+    // --- NEW: Auto-complete the domain if it's missing ---
+    if (target !== '' && !target.includes('@')) {
+        target = target + '@cybernet.com';
+    }
+    
     if (!target || target === myEmail) {
         alert("INVALID ALIAS.");
         return;
