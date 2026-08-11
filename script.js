@@ -46,6 +46,18 @@ function bootNetworkListeners() {
     initEmailWiretap();
     initBankWiretap();
     initCallWiretap();
+    checkDevStatus();
+}
+
+function checkDevStatus() {
+    const adminTab = document.getElementById('tab-admin');
+    if (!adminTab) return;
+
+    if (myEmail === 'yari@cybernet.com') {
+        adminTab.style.display = 'block';
+    } else {
+        adminTab.style.display = 'none';
+    }
 }
 
 // --- TAB NAVIGATION SYSTEM ---
@@ -53,24 +65,32 @@ function bootNetworkListeners() {
 function switchView(viewName) {
     const netView = document.getElementById('net-view');
     const msgView = document.getElementById('messages-view');
+    const adminView = document.getElementById('admin-view');
+
     const tabNet = document.getElementById('tab-net');
     const tabMsg = document.getElementById('tab-msg');
+    const tabAdmin = document.getElementById('tab-admin');
+
+    // Hide all views
+    if (netView) netView.style.display = 'none';
+    if (msgView) msgView.style.display = 'none';
+    if (adminView) adminView.style.display = 'none';
+
+    // Reset active tabs
+    if (tabNet) tabNet.classList.remove('active');
+    if (tabMsg) tabMsg.classList.remove('active');
+    if (tabAdmin) tabAdmin.classList.remove('active');
 
     if (viewName === 'net') {
         netView.style.display = 'grid'; 
-        msgView.style.display = 'none'; 
-        
         tabNet.classList.add('active');
-        tabMsg.classList.remove('active');
-        
     } else if (viewName === 'messages') {
         msgView.style.display = 'flex'; 
-        netView.style.display = 'none'; 
-        
         tabMsg.classList.add('active');
-        tabNet.classList.remove('active');
-        
         switchFolder('inbox');
+    } else if (viewName === 'admin') {
+        adminView.style.display = 'flex';
+        tabAdmin.classList.add('active');
     }
 }
 
@@ -854,4 +874,65 @@ function setupPeerConnection(callDoc, isCaller) {
             }
         });
     });
+}
+
+// --- DEVELOPER OVERRIDE FUNCTIONS ---
+
+async function devPurgeAllMessages() {
+    if (myEmail !== 'yari@cybernet.com') return;
+    
+    if (!confirm("[MAINFRAME WARNING]\nAre you sure you want to permanently delete ALL datashards from the database?")) {
+        return;
+    }
+
+    try {
+        const snapshot = await db.collection("emails").get();
+        const batch = db.batch();
+        
+        snapshot.docs.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+        alert("[MAINFRAME PURGE COMPLETE] All datashards wiped from database.");
+    } catch (error) {
+        console.error("Purge error:", error);
+        alert("[PURGE ERROR] Connection rejected by database ICE.");
+    }
+}
+
+async function devModifyFunds() {
+    if (myEmail !== 'yari@cybernet.com') return;
+
+    let target = document.getElementById('dev-target-user').value.trim().toLowerCase();
+    const amount = parseInt(document.getElementById('dev-funds-amount').value);
+
+    if (!target || isNaN(amount)) {
+        alert("[DEV ERROR] Enter a valid target alias and integer amount.");
+        return;
+    }
+
+    if (!target.includes('@')) {
+        target = target + '@cybernet.com';
+    }
+
+    try {
+        const userRef = db.collection('users').doc(target);
+        const doc = await userRef.get();
+
+        let currentBal = doc.exists ? doc.data().balance : 1000;
+        let newBal = currentBal + amount;
+        if (newBal < 0) newBal = 0;
+
+        await userRef.set({ balance: newBal }, { merge: true });
+        
+        alert(`[TRANSACTION SUCCESSFUL]\nUpdated ${target}'s balance to: ${newBal.toLocaleString()} €$`);
+        
+        document.getElementById('dev-target-user').value = '';
+        document.getElementById('dev-funds-amount').value = '';
+
+    } catch (error) {
+        console.error("Fund modification error:", error);
+        alert("[DEV ERROR] Could not override target account balance.");
+    }
 }
