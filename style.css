@@ -1116,3 +1116,18 @@ video.holocall-image {
     width: 100%;
     height: 100%;
 }
+
+/* --- LOCAL VIDEO PICTURE-IN-PICTURE --- */
+.local-video-preview {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 75px;
+    height: 75px;
+    border: 2px solid var(--cyan);
+    object-fit: cover;
+    z-index: 10;
+    background: #000;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    transition: 0.3s;
+}

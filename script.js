@@ -744,13 +744,22 @@ async function toggleCamera() {
     if (!peerConnection) return;
     
     const camBtn = document.getElementById('cam-toggle-btn');
-    const videoSender = peerConnection.getSenders().find(s => s.track?.kind === 'video' || s.transceiver?.receiver.track.kind === 'video');
+    const localVid = document.getElementById('local-video');
+    
+    // CORRECTED: Safely finds the video channel even if it starts empty
+    const videoTransceiver = peerConnection.getTransceivers().find(t => t.receiver.track.kind === 'video');
+    const videoSender = videoTransceiver ? videoTransceiver.sender : null;
 
     if (!isCameraOn) {
         try {
             const camStream = await navigator.mediaDevices.getUserMedia({ video: true });
             localVideoTrack = camStream.getVideoTracks()[0];
             
+            // Show local preview Picture-in-Picture
+            localVid.srcObject = new MediaStream([localVideoTrack]);
+            localVid.classList.remove('hidden');
+            
+            // Transmit video to the target
             if (videoSender) {
                 await videoSender.replaceTrack(localVideoTrack);
             }
@@ -768,6 +777,11 @@ async function toggleCamera() {
             localVideoTrack = null;
         }
         
+        // Hide local preview
+        localVid.classList.add('hidden');
+        localVid.srcObject = null;
+        
+        // Stop transmitting to the target
         if (videoSender) {
             await videoSender.replaceTrack(null);
         }
@@ -869,6 +883,13 @@ function stopCallCleanup() {
     document.getElementById('holocall-ui').classList.add('hidden');
     document.getElementById('remote-video').classList.add('hidden');
     document.getElementById('holocall-placeholder-img').classList.remove('hidden');
+    
+    // Turn off Local PIP preview
+    const localVid = document.getElementById('local-video');
+    if (localVid) {
+        localVid.classList.add('hidden');
+        localVid.srcObject = null;
+    }
     
     const camBtn = document.getElementById('cam-toggle-btn');
     if (camBtn) {
