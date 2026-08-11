@@ -443,8 +443,13 @@ function animateTransactionOverlay(difference) {
     
     if (!overlay || !textElement) return;
 
+    // 1. Clear previous animation classes
     textElement.className = '';
     
+    // 2. FORCE BROWSER REFLOW (This forces the CSS animation to reset to frame 0)
+    void textElement.offsetWidth;
+
+    // 3. Apply text and re-trigger animation
     if (difference > 0) {
         textElement.innerText = `+${difference.toLocaleString()} €$`;
         textElement.classList.add('transact-up');
@@ -453,8 +458,10 @@ function animateTransactionOverlay(difference) {
         textElement.classList.add('transact-down');
     }
     
+    // 4. Reveal the overlay
     overlay.classList.remove('hidden');
     
+    // 5. Hide the overlay container when the 2-second animation ends
     setTimeout(() => {
         overlay.classList.add('hidden');
     }, 2000);
