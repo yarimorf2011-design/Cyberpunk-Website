@@ -112,32 +112,30 @@
                 </div>
             </div>
 
-            <!-- DEV OVERRIDE PANEL -->
-    <div id="admin-view" class="messages-container" style="display: none; padding: 20px; flex-direction: column; gap: 20px; overflow-y: auto;">
-     <h2 style="color: #ff2a2a; border-bottom: 1px solid #ff2a2a; padding-bottom: 10px; margin-bottom: 10px;">
-            ⬢ MAINFRAME DEVELOPER OVERRIDE
-     </h2>
+<!-- DEV OVERRIDE PANEL -->
+<div id="admin-view" class="messages-container" style="display: none !important; padding: 20px; flex-direction: column; gap: 20px; overflow-y: auto;">
+    <h2 style="color: #ff2a2a; border-bottom: 1px solid #ff2a2a; padding-bottom: 10px; margin-bottom: 10px;">
+        ⬢ MAINFRAME DEVELOPER OVERRIDE
+    </h2>
 
-     <!-- Purge Messages -->
-     <div style="border: 1px solid #ff2a2a; padding: 15px; background: rgba(255, 42, 42, 0.05);">
+    <!-- Purge Messages -->
+    <div style="border: 1px solid #ff2a2a; padding: 15px; background: rgba(255, 42, 42, 0.05);">
         <h3 style="color: #ff2a2a; margin-bottom: 5px;">CLEAR GLOBAL MESSAGE LOG</h3>
         <p style="color: #fff; margin-bottom: 15px; font-size: 0.9rem;">Permanently wipe every email message in the global database.</p>
         <button class="send-btn" style="background: #ff2a2a; color: #000; border-color: #ff2a2a; font-weight: bold;" onclick="devPurgeAllMessages()">CLEAR MESSAGE LOG</button>
-      </div>
+    </div>
 
     <!-- Modify User Funds -->
-     <div style="border: 1px solid #ffcc00; padding: 15px; background: rgba(255, 204, 0, 0.05);">
+    <div style="border: 1px solid #ffcc00; padding: 15px; background: rgba(255, 204, 0, 0.05);">
         <h3 style="color: #ffcc00; margin-bottom: 5px;">CREDIT / DEBIT USER FUNDS</h3>
         <p style="color: #fff; margin-bottom: 15px; font-size: 0.9rem;">Add positive values (e.g. 50000) or negative values (e.g. -50000) to any user balance.</p>
         <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
             <input type="text" id="dev-target-user" class="compose-input" placeholder="Target Alias (e.g. v or v@cybernet.com)" autocomplete="off">
             <input type="number" id="dev-funds-amount" class="compose-input" placeholder="Amount €$ (e.g. 100000)" autocomplete="off">
             <button class="send-btn" style="color: #ffcc00; border-color: #ffcc00; align-self: flex-start;" onclick="devModifyFunds()">MODIFY BALANCE</button>
-         </div>
-       </div>
+        </div>
     </div>
-        </main>
-    </div>
+</div>
 
     <!-- EXISTING MODALS (Radio, Chat, Weather) -->
     <div id="radio-modal" class="radio-modal hidden">

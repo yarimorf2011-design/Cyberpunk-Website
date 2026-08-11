@@ -1089,3 +1089,29 @@ body {
         height: 600px;
     }
 }
+
+/* =========================================
+   --- CONTAINER & TAB LAYOUT REPAIR ---
+   ========================================= */
+
+   .os-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.top-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px;
+    margin-bottom: -1px;
+    z-index: 2;
+}
+
+.main-window {
+    width: 100% !important;
+    box-sizing: border-box;
+}
