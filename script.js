@@ -741,12 +741,16 @@ async function submitCallAlias() {
 }
 
 async function toggleCamera() {
-    if (!peerConnection) return;
+    if (!peerConnection || !currentCallId) return;
     
     const camBtn = document.getElementById('cam-toggle-btn');
-    
     const videoTransceiver = peerConnection.getTransceivers().find(t => t.receiver.track.kind === 'video');
     const videoSender = videoTransceiver ? videoTransceiver.sender : null;
+
+    // Connect to database to sync state
+    const callDocRef = db.collection('calls').doc(currentCallId);
+    const callData = (await callDocRef.get()).data();
+    const amICaller = (callData.callerEmail === myEmail);
 
     if (!isCameraOn) {
         try {
@@ -760,6 +764,9 @@ async function toggleCamera() {
             isCameraOn = true;
             camBtn.innerText = "CAM: ON";
             camBtn.classList.add('active');
+
+            // Tell Firebase your camera is ON
+            await callDocRef.update({ [amICaller ? 'callerCam' : 'targetCam']: true });
         } catch (err) {
             console.error("Camera access error:", err);
             alert("[OPTICS ERROR] Could not access local camera feed.");
@@ -777,6 +784,9 @@ async function toggleCamera() {
         isCameraOn = false;
         camBtn.innerText = "CAM: OFF";
         camBtn.classList.remove('active');
+
+        // Tell Firebase your camera is OFF
+        await callDocRef.update({ [amICaller ? 'callerCam' : 'targetCam']: false });
     }
 }
 
@@ -860,6 +870,23 @@ function listenForCallEnd(callId) {
     db.collection('calls').doc(callId).onSnapshot(doc => {
         if (!doc.exists) {
             stopCallCleanup();
+        } else {
+            // NEW: Real-time UI Sync via Firebase
+            const data = doc.data();
+            const remoteVid = document.getElementById('remote-video');
+            const placeholderImg = document.getElementById('holocall-placeholder-img');
+            
+            // Check if the OTHER person's camera is on
+            const amICaller = (data.callerEmail === myEmail);
+            const isRemoteCamOn = amICaller ? data.targetCam : data.callerCam;
+
+            if (isRemoteCamOn) {
+                remoteVid.classList.remove('hidden');
+                placeholderImg.classList.add('hidden');
+            } else {
+                remoteVid.classList.add('hidden');
+                placeholderImg.classList.remove('hidden');
+            }
         }
     });
 }
@@ -898,8 +925,6 @@ function setupPeerConnection(callDoc, isCaller) {
         peerConnection.addTrack(track, localStream);
     });
 
-    // BUG FIX: ONLY the caller initializes the transceiver. 
-    // The receiver will automatically inherit it to prevent crossed streams.
     if (isCaller) {
         peerConnection.addTransceiver('video', { direction: 'sendrecv' });
     }
@@ -912,22 +937,9 @@ function setupPeerConnection(callDoc, isCaller) {
             document.getElementById('remote-audio').srcObject = remoteStream;
         } else if (event.track.kind === 'video') {
             const remoteVid = document.getElementById('remote-video');
-            const placeholderImg = document.getElementById('holocall-placeholder-img');
-            
             remoteStream.addTrack(event.track);
             remoteVid.srcObject = remoteStream;
-            
-            // Swap placeholder for live video when frames start arriving
-            event.track.onunmute = () => {
-                remoteVid.classList.remove('hidden');
-                placeholderImg.classList.add('hidden');
-            };
-            
-            // Revert to placeholder if they turn their camera off
-            event.track.onmute = () => {
-                remoteVid.classList.add('hidden');
-                placeholderImg.classList.remove('hidden');
-            };
+            // The broken mute/unmute listeners have been removed from here!
         }
     };
 
