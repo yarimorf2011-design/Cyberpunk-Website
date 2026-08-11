@@ -2,6 +2,8 @@
 
 let myEmail = null;
 let currentFunds = 0;
+let localVideoTrack = null;
+let isCameraOn = false;
 
 window.addEventListener('DOMContentLoaded', () => {
     const savedEmail = localStorage.getItem('cybernetEmail');
@@ -738,6 +740,44 @@ async function submitCallAlias() {
     listenForCallEnd(currentCallId);
 }
 
+async function toggleCamera() {
+    if (!peerConnection) return;
+    
+    const camBtn = document.getElementById('cam-toggle-btn');
+    const videoSender = peerConnection.getSenders().find(s => s.track?.kind === 'video' || s.transceiver?.receiver.track.kind === 'video');
+
+    if (!isCameraOn) {
+        try {
+            const camStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            localVideoTrack = camStream.getVideoTracks()[0];
+            
+            if (videoSender) {
+                await videoSender.replaceTrack(localVideoTrack);
+            }
+            
+            isCameraOn = true;
+            camBtn.innerText = "CAM: ON";
+            camBtn.classList.add('active');
+        } catch (err) {
+            console.error("Camera access error:", err);
+            alert("[OPTICS ERROR] Could not access local camera feed.");
+        }
+    } else {
+        if (localVideoTrack) {
+            localVideoTrack.stop();
+            localVideoTrack = null;
+        }
+        
+        if (videoSender) {
+            await videoSender.replaceTrack(null);
+        }
+        
+        isCameraOn = false;
+        camBtn.innerText = "CAM: OFF";
+        camBtn.classList.remove('active');
+    }
+}
+
 function initCallWiretap() {
     db.collection('calls').where('targetEmail', '==', myEmail).where('status', '==', 'ringing')
         .onSnapshot(snapshot => {
@@ -825,8 +865,23 @@ function listenForCallEnd(callId) {
 function stopCallCleanup() {
     ringtoneAudio.pause();
     ringtoneAudio.currentTime = 0;
-    document.getElementById('holocall-ui').classList.add('hidden');
     
+    document.getElementById('holocall-ui').classList.add('hidden');
+    document.getElementById('remote-video').classList.add('hidden');
+    document.getElementById('holocall-placeholder-img').classList.remove('hidden');
+    
+    const camBtn = document.getElementById('cam-toggle-btn');
+    if (camBtn) {
+        camBtn.innerText = "CAM: OFF";
+        camBtn.classList.remove('active');
+    }
+
+    if (localVideoTrack) {
+        localVideoTrack.stop();
+        localVideoTrack = null;
+    }
+    isCameraOn = false;
+
     if (peerConnection) peerConnection.close();
     if (localStream) localStream.getTracks().forEach(t => t.stop());
     
@@ -837,16 +892,40 @@ function stopCallCleanup() {
 }
 
 function setupPeerConnection(callDoc, isCaller) {
+    // Add audio track
     localStream.getTracks().forEach(track => {
         peerConnection.addTrack(track, localStream);
     });
 
+    // Reserve video transceiver for seamless mid-call camera toggling
+    peerConnection.addTransceiver('video', { direction: 'sendrecv' });
+
     remoteStream = new MediaStream();
+    
     peerConnection.ontrack = event => {
-        event.streams[0].getTracks().forEach(track => {
-            remoteStream.addTrack(track);
-        });
-        document.getElementById('remote-audio').srcObject = remoteStream;
+        if (event.track.kind === 'audio') {
+            remoteStream.addTrack(event.track);
+            document.getElementById('remote-audio').srcObject = remoteStream;
+        } else if (event.track.kind === 'video') {
+            const remoteVid = document.getElementById('remote-video');
+            const placeholderImg = document.getElementById('holocall-placeholder-img');
+            
+            const vidStream = new MediaStream([event.track]);
+            remoteVid.srcObject = vidStream;
+            
+            event.track.onunmute = () => {
+                remoteVid.classList.remove('hidden');
+                placeholderImg.classList.add('hidden');
+            };
+            event.track.onmute = () => {
+                remoteVid.classList.add('hidden');
+                placeholderImg.classList.remove('hidden');
+            };
+            event.track.onended = () => {
+                remoteVid.classList.add('hidden');
+                placeholderImg.classList.remove('hidden');
+            };
+        }
     };
 
     const callerCandidatesCollection = callDoc.collection('callerCandidates');

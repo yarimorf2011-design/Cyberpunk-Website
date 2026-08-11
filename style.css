@@ -1083,3 +1083,36 @@ body {
         height: 600px;
     }
 }
+
+/* --- HOLOCALL VIDEO & CONTROLS FIX --- */
+
+#holocall-active-controls {
+    flex-direction: column !important;
+    gap: 8px;
+}
+
+.cam-btn {
+    background: rgba(0, 240, 255, 0.1);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    width: 100%;
+}
+
+.cam-btn:hover {
+    background: var(--cyan);
+    color: #000;
+    box-shadow: 0 0 10px var(--cyan);
+}
+
+.cam-btn.active {
+    background: rgba(51, 255, 51, 0.2);
+    border-color: #33ff33;
+    color: #33ff33;
+    box-shadow: 0 0 10px #33ff33;
+}
+
+video.holocall-image {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+}

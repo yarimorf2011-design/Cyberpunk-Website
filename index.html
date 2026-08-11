@@ -271,8 +271,10 @@
     </div>
 
     <div id="holocall-ui" class="holocall-container hidden">
+        
         <div class="holocall-frame">
-            <img src="assets/CallingImage.jpg" alt="Caller ID" class="holocall-image">
+            <img src="assets/CallingImage.jpg" alt="Caller ID" id="holocall-placeholder-img" class="holocall-image">
+            <video id="remote-video" autoplay playsinline class="holocall-image hidden"></video>
             <div class="holocall-overlay scanlines"></div>
         </div>
         
@@ -286,23 +288,12 @@
             <button onclick="declineCall()" class="holo-btn reject-btn">DECLINE</button>
         </div>
         
+        <!-- ACTIVE CONTROLS WITH CAMERA TOGGLE BELOW DISCONNECT -->
         <div id="holocall-active-controls" class="holocall-controls hidden">
             <button onclick="hangUp()" class="holo-btn reject-btn">DISCONNECT</button>
+            <button id="cam-toggle-btn" onclick="toggleCamera()" class="holo-btn cam-btn">CAM: OFF</button>
         </div>
-    </div>
-    
-    <div id="setup-modal" class="setup-modal hidden">
-        <div class="setup-window">
-            <div class="setup-header">SYSTEM INITIALIZATION</div>
-            <div class="setup-content">
-                <p style="margin-bottom: 15px; color: #fff;">NEW USER DETECTED. PLEASE ENTER YOUR ALIAS TO GENERATE A SECURE CYBERNET ADDRESS.</p>
-                <div class="chat-input-area">
-                    <span class="prompt-arrow">></span>
-                    <input type="text" id="username-input" placeholder="Enter alias..." onkeypress="handleSetupEnter(event)" autocomplete="off">
-                    <button onclick="registerUser()" class="send-btn">REGISTER</button>
-                </div>
-            </div>
-        </div>
+
     </div>
     
     <!-- SCRIPTS -->
