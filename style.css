@@ -15,13 +15,12 @@
 body {
     background-color: var(--bg-color);
     color: var(--cyan);
-    font-family: 'Courier New', Courier, monospace; /* Monospace for that terminal feel */
+    font-family: 'Courier New', Courier, monospace;
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    /* Custom angular cursor */
     cursor: url("assets/Normal select.cur"), auto; 
 }
 
@@ -41,10 +40,11 @@ body {
 /* --- Main Layout --- */
 .os-container {
     width: 90%;
-    max-width: 1200px;
+    max-width: 1100px;
     height: 80vh;
     display: flex;
     flex-direction: column;
+    margin: 20px auto;
     position: relative;
     z-index: 10;
 }
@@ -52,8 +52,11 @@ body {
 /* --- Top Navigation Tabs --- */
 .top-nav {
     display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: -1px; /* Keeps tabs seamless with the top border */
+    z-index: 11;
 }
 
 .tab {
@@ -84,11 +87,13 @@ body {
 /* --- Main Window --- */
 .main-window {
     border: 2px solid var(--cyan);
+    width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
     position: relative;
+    background-color: var(--bg-color); /* Masks borders underneath tabs */
 }
 
 /* Inner border lines */
@@ -98,6 +103,7 @@ body {
     top: 5px; left: 5px; right: 5px; bottom: 5px;
     border: 1px solid rgba(0, 240, 255, 0.3);
     pointer-events: none;
+    z-index: 1;
 }
 
 /* Header Bar */
@@ -105,17 +111,25 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 30px;
+    width: 100%;
+    gap: 15px;
+    padding: 10px 15px;
     background: rgba(0, 240, 255, 0.1);
     border-bottom: 2px solid var(--cyan);
     font-size: 1.2rem;
     font-weight: bold;
     letter-spacing: 2px;
+    z-index: 2; /* Keeps it above inner borders */
 }
 
-.url {
+.window-header .brand {
+    white-space: nowrap;
+}
+
+.window-header .url {
     font-size: 0.9rem;
     opacity: 0.8;
+    white-space: nowrap;
 }
 
 .system-info {
@@ -130,6 +144,7 @@ body {
     letter-spacing: 1px;
     border-bottom: 1px solid rgba(0, 240, 255, 0.3);
     color: rgba(255, 255, 255, 0.8);
+    z-index: 2;
 }
 
 /* --- App Grid --- */
@@ -140,6 +155,7 @@ body {
     padding: 40px;
     align-content: start;
     flex-grow: 1;
+    z-index: 2;
 }
 
 .app-item {
@@ -153,7 +169,6 @@ body {
 
 .app-item:hover {
     transform: scale(1.05);
-	
 }
 
 .app-item:hover .app-icon {
@@ -168,7 +183,7 @@ body {
     margin-bottom: 15px;
     background-size: cover;
     background-position: center;
-    background-color: rgba(0, 240, 255, 0.05); /* Placeholder background */
+    background-color: rgba(0, 240, 255, 0.05); 
     transition: all 0.3s;
 }
 
@@ -181,14 +196,13 @@ body {
 }
 
 /* =========================================
-   ADD YOUR IMAGES HERE
+   APP ICONS
 ========================================= */
 #icon-Radio { background-image: url('assets/RadioIcon.png'); }
 #icon-Search { background-image: url('assets/SearchIcon.png'); }
 #icon-Weather { background-image: url('assets/WeatherIcon.png'); }
 #icon-hlas    { background-image: url('path/to/hlas.png'); }
 #icon-crystal { background-image: url('path/to/crystal.png'); }
-
 
 
 /* --- RADIOPORT MODAL --- */
@@ -241,11 +255,9 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-	min-width: 150px;
+    min-width: 150px;
     max-width: 150px;
     flex-shrink: 0; 
-    
-    /* Keep any images that are too big from spilling outside the box */
     overflow: hidden;
 }
 
@@ -255,7 +267,6 @@ body {
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    /* Default logo color trick */
     background-color: rgba(0, 240, 255, 0.1);
 }
 
@@ -362,7 +373,7 @@ body {
 .chat-modal {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(10, 0, 0, 0.85); /* Darker, redder tint */
+    background: rgba(10, 0, 0, 0.85); 
     display: flex;
     justify-content: center;
     align-items: center;
@@ -492,7 +503,7 @@ body {
 .weather-modal {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(14,0,0,0.85); /* Dark green tint */
+    background: rgba(14,0,0,0.85);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -568,7 +579,7 @@ body {
 
 .condition-display {
     font-size: 1.5rem;
-    color: #ffcc00; /* Warning yellow */
+    color: #ffcc00; 
     font-weight: bold;
     text-shadow: 0 0 5px rgba(0,219,255,0.50);
     letter-spacing: 1px;
@@ -600,18 +611,46 @@ body {
     font-weight: bold;
 }
 
-/* App icon background if you have an image for it */
-#icon-bio { background-image: url('path/to/biotechnica.png'); }
 
 /* --- FULL-SCREEN EMAIL CLIENT --- */
-
 .messages-container {
-    /* Uses Flexbox to create a 3-column layout that fills the whole screen */
     display: flex;
     flex-direction: row;
-    height: 100%;
+    height: 55vh;         
+    min-height: 400px;    
+    max-height: 800px;
     width: 100%;
     background: rgba(0, 20, 25, 0.5);
+    overflow: hidden;
+    z-index: 2;
+}
+
+.mail-sidebar,
+.mail-list,
+.mail-content {
+    overflow-y: auto;     
+    height: 100%;
+}
+
+/* Cyberpunk-themed scrollbars */
+.mail-list::-webkit-scrollbar,
+.mail-content::-webkit-scrollbar,
+.mail-sidebar::-webkit-scrollbar,
+#admin-view::-webkit-scrollbar {
+    width: 4px;
+}
+.mail-list::-webkit-scrollbar-track,
+.mail-content::-webkit-scrollbar-track,
+.mail-sidebar::-webkit-scrollbar-track,
+#admin-view::-webkit-scrollbar-track {
+    background: transparent;
+}
+.mail-list::-webkit-scrollbar-thumb,
+.mail-content::-webkit-scrollbar-thumb,
+.mail-sidebar::-webkit-scrollbar-thumb,
+#admin-view::-webkit-scrollbar-thumb {
+    background: var(--cyan, #00f0ff);
+    border-radius: 2px;
 }
 
 .mail-sidebar {
@@ -644,7 +683,6 @@ body {
 .mail-list {
     width: 300px;
     border-right: 1px solid rgba(0, 240, 255, 0.3);
-    overflow-y: auto;
     background: rgba(0, 5, 10, 0.8);
 }
 
@@ -687,7 +725,6 @@ body {
 .mail-content {
     flex-grow: 1;
     padding: 40px;
-    overflow-y: auto;
     position: relative;
 }
 
@@ -729,6 +766,7 @@ body {
     margin-bottom: 15px;
     font-size: 0.95rem;
 }
+
 
 /* --- SETUP MODAL FIX --- */
 .setup-modal {
@@ -926,10 +964,8 @@ body {
    --- MILITECH BANKING & EDDIES SYSTEM ---
    ========================================= */
 
-/* 1. Bank App Grid Icon */
 #icon-Bank {
-    background-color: #00f7ff; /* Fallback gold color */
-    /* Add a custom bank icon to your assets folder if you want! */
+    background-color: #00f7ff; 
     background-image: url('assets/BankIcon.png'); 
     background-size: cover;
     background-position: center;
@@ -939,23 +975,21 @@ body {
     box-shadow: 0 0 20px rgba(80, 255, 240, 0.8);
 }
 
-/* 2. Hide ugly default browser arrows on the Eddies number input */
 #compose-eddies::-webkit-inner-spin-button,
 #compose-eddies::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
+
 #compose-eddies {
-    -moz-appearance: textfield; /* Fix for Firefox */
+    -moz-appearance: textfield;
 }
 
-/* 3. Custom Gold Focus Glow for the Eddies input */
 #compose-eddies:focus {
     box-shadow: 0 0 15px rgba(255, 204, 0, 0.4) inset !important;
     outline: none;
 }
 
-/* 4. Secure Transaction Receipt Styling in Emails */
 .transaction-receipt {
     color: #ffcc00;
     border: 1px dashed #ffcc00;
@@ -982,12 +1016,12 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.4); /* Darkens the screen slightly */
+    background: rgba(0, 0, 0, 0.4); 
     z-index: 10000;
     display: flex;
     justify-content: center;
     align-items: center;
-    pointer-events: none; /* Clicks pass through it */
+    pointer-events: none; 
     transition: opacity 0.3s ease;
 }
 
@@ -1004,14 +1038,12 @@ body {
     transform: translateY(0) scale(0.5);
 }
 
-/* Gaining Eddies */
 .transact-up {
     color: #33ff33;
     text-shadow: 0 0 20px #33ff33, 0 0 40px #33ff33;
     animation: popUpwards 2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
 }
 
-/* Losing Eddies */
 .transact-down {
     color: #ff2a2a;
     text-shadow: 0 0 20px #ff2a2a, 0 0 40px #ff2a2a;
@@ -1036,97 +1068,18 @@ body {
    --- UI OVERFLOW & SCALING FIXES ---
    ========================================= */
 
-/* 1. Lock the mail container height so it doesn't break the bottom border */
-.messages-container {
-    height: 55vh;         /* Scales dynamically with the screen height */
-    min-height: 400px;    /* Prevents it from getting too crushed */
-    max-height: 800px;
-    overflow: hidden;     /* Keeps children safely inside the neon borders */
-}
-
-/* 2. Turn the columns into individually scrollable boxes */
-.mail-sidebar,
-.mail-list,
-.mail-content {
-    overflow-y: auto;     /* Enables vertical scrolling */
-    height: 100%;
-}
-
-/* 3. Cyberpunk-themed scrollbars (Chrome/Safari/Edge) */
-.mail-list::-webkit-scrollbar,
-.mail-content::-webkit-scrollbar,
-.mail-sidebar::-webkit-scrollbar {
-    width: 4px;
-}
-.mail-list::-webkit-scrollbar-track,
-.mail-content::-webkit-scrollbar-track,
-.mail-sidebar::-webkit-scrollbar-track {
-    background: transparent;
-}
-.mail-list::-webkit-scrollbar-thumb,
-.mail-content::-webkit-scrollbar-thumb,
-.mail-sidebar::-webkit-scrollbar-thumb {
-    background: var(--cyan, #00f0ff);
-    border-radius: 2px;
-}
-
-/* 4. Fix for Laptops / Small Screens cutting off the bottom */
 @media (max-height: 850px), (max-width: 1000px) {
     body, html {
-        /* Force the browser to allow normal scrolling if the screen is too small */
         overflow-y: auto !important;
     }
     
     .os-container {
-        /* Un-lock the height so it can safely stretch down the page */
         height: auto !important;
         min-height: 100vh;
         padding-bottom: 2rem;
     }
     
     .messages-container {
-        /* Give it plenty of vertical breathing room on small screens */
         height: 600px;
     }
-}
-
-/* =========================================
-   --- LAYOUT ALIGNMENT & HEADER FIXES ---
-   ========================================= */
-
-/* 1. Force tabs to sit directly on top of the main window */
-.os-container {
-    display: flex !important;
-    flex-direction: column !important; /* Stacks nav above main window */
-    align-items: center !important;    /* Centers the entire OS */
-    width: 90%;
-    max-width: 1100px;
-    margin: 20px auto;
-}
-
-/* 2. Align tabs flush with the left side of the main window */
-.top-nav {
-    display: flex !important;
-    width: 100% !important;
-    justify-content: flex-start !important;
-    gap: 8px;
-    margin-bottom: -1px; /* Keeps tabs seamless with the top border */
-}
-
-/* 3. Stop header text ("KEYSTONE" & "NETDIR") from overlapping */
-.window-header {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
-    gap: 15px;
-    padding: 10px 15px;
-}
-
-.window-header .brand {
-    white-space: nowrap;
-}
-
-.window-header .url {
-    white-space: nowrap;
 }

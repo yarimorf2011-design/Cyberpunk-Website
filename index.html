@@ -6,20 +6,23 @@
     <title>Keystone OS - Arasaka Intranet</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<!-- MASSIVE TRANSACTION OVERLAY -->
-<div id="transaction-overlay" class="transaction-overlay hidden">
-    <span id="transaction-text"></span>
-</div>
-
 <body>
     <div class="scanlines"></div>
 
-    <nav class="top-nav">
-        <div class="tab" id="tab-msg" onclick="switchView('messages')">MESSAGES</div>
-        <div class="tab active" id="tab-net" onclick="switchView('net')">NET</div>
-        <!-- HIDDEN DEV TAB -->
-        <div class="tab" id="tab-admin" onclick="switchView('admin')" style="display: none; border-color: #ff2a2a; color: #ff2a2a;">DEV CONTROL</div>
-    </nav>
+    <!-- MASSIVE TRANSACTION OVERLAY (Moved inside body!) -->
+    <div id="transaction-overlay" class="transaction-overlay hidden">
+        <span id="transaction-text"></span>
+    </div>
+
+    <!-- RESTORED OS-CONTAINER WRAPPER -->
+    <div class="os-container">
+        
+        <nav class="top-nav">
+            <div class="tab" id="tab-msg" onclick="switchView('messages')">MESSAGES</div>
+            <div class="tab active" id="tab-net" onclick="switchView('net')">NET</div>
+            <!-- HIDDEN DEV TAB -->
+            <div class="tab" id="tab-admin" onclick="switchView('admin')" style="display: none; border-color: #ff2a2a; color: #ff2a2a;">DEV CONTROL</div>
+        </nav>
 
         <main class="main-window">
             
@@ -44,7 +47,6 @@
             </div>
 
             <div id="net-view" class="grid-container">
-                
                 <div class="app-item" onclick="openRadio()">
                     <div class="app-icon" id="icon-Radio"></div>
                     <span class="app-label">RADIO</span>
@@ -60,28 +62,24 @@
                     <span class="app-label">WEATHER</span>
                 </div>
 
-                <!-- NEW: Bank App Icon -->
+                <!-- Bank App Icon -->
                 <div class="app-item" onclick="openBank()">
                     <div class="app-icon" id="icon-Bank"></div>
                     <span class="app-label">BANK</span>
                 </div>
-                
             </div>
 
-        <div id="messages-view" class="messages-container" style="display: none;">
-                
+            <div id="messages-view" class="messages-container" style="display: none;">
                 <div class="mail-sidebar">
                     <button class="compose-btn" onclick="openCompose()">+ NEW MESSAGE</button>
-                        <button class="compose-btn" style="border-color: #ffcc00; color: #ffcc00;" onclick="openCallPrompt()">[ VOICELINK ]</button>
+                    <button class="compose-btn" style="border-color: #ffcc00; color: #ffcc00;" onclick="openCallPrompt()">[ VOICELINK ]</button>
                     <div class="mail-folder active" id="folder-inbox" onclick="switchFolder('inbox')">📥 INBOX</div>
                     <div class="mail-folder" id="folder-sent" onclick="switchFolder('sent')">📤 SENT</div>
                 </div>
 
-                <div class="mail-list" id="dynamic-mail-list">
-                    </div>
+                <div class="mail-list" id="dynamic-mail-list"></div>
 
                 <div class="mail-content">
-                    
                     <div id="mail-placeholder" class="mail-placeholder">
                         <span class="icon">⬢</span><br>
                         SELECT A DATASHARD TO READ
@@ -93,8 +91,7 @@
                             <h4 id="read-from">FROM: </h4>
                             <h4 id="read-to">TO: </h4>
                         </div>
-                        <div class="mail-body-text" id="read-body">
-                            </div>
+                        <div class="mail-body-text" id="read-body"></div>
                     </div>
 
                     <div id="compose-view" class="compose-container" style="display: none;">
@@ -102,40 +99,42 @@
                         <input type="text" id="compose-to" class="compose-input" placeholder="TO: (e.g., target@arasaka.corp)" autocomplete="off">
                         <input type="text" id="compose-subject" class="compose-input" placeholder="SUBJECT:" autocomplete="off">
                         
-                        <!-- NEW: Attach Eddies Input -->
+                        <!-- Attach Eddies Input -->
                         <input type="number" id="compose-eddies" class="compose-input" placeholder="ATTACH FUNDS: 0 €$ (Optional)" min="0" style="border-color: #ffcc00; color: #ffcc00;" autocomplete="off">
                         
                         <textarea id="compose-body" class="compose-textarea" placeholder="Input datastream here..."></textarea>
                         <button class="send-btn" style="margin-left: 0; margin-top: 10px;" onclick="sendOutboundEmail()">TRANSMIT</button>
                     </div>
-
                 </div>
             </div>
 
-<!-- DEV OVERRIDE PANEL -->
-<div id="admin-view" class="messages-container" style="display: none !important; padding: 20px; flex-direction: column; gap: 20px; overflow-y: auto;">
-    <h2 style="color: #ff2a2a; border-bottom: 1px solid #ff2a2a; padding-bottom: 10px; margin-bottom: 10px;">
-        ⬢ MAINFRAME DEVELOPER OVERRIDE
-    </h2>
+            <!-- DEV OVERRIDE PANEL (Safely inside main-window now) -->
+            <div id="admin-view" class="messages-container" style="display: none !important; padding: 20px; flex-direction: column; gap: 20px; overflow-y: auto;">
+                <h2 style="color: #ff2a2a; border-bottom: 1px solid #ff2a2a; padding-bottom: 10px; margin-bottom: 10px;">
+                    ⬢ MAINFRAME DEVELOPER OVERRIDE
+                </h2>
 
-    <!-- Purge Messages -->
-    <div style="border: 1px solid #ff2a2a; padding: 15px; background: rgba(255, 42, 42, 0.05);">
-        <h3 style="color: #ff2a2a; margin-bottom: 5px;">CLEAR GLOBAL MESSAGE LOG</h3>
-        <p style="color: #fff; margin-bottom: 15px; font-size: 0.9rem;">Permanently wipe every email message in the global database.</p>
-        <button class="send-btn" style="background: #ff2a2a; color: #000; border-color: #ff2a2a; font-weight: bold;" onclick="devPurgeAllMessages()">CLEAR MESSAGE LOG</button>
-    </div>
+                <!-- Purge Messages -->
+                <div style="border: 1px solid #ff2a2a; padding: 15px; background: rgba(255, 42, 42, 0.05);">
+                    <h3 style="color: #ff2a2a; margin-bottom: 5px;">CLEAR GLOBAL MESSAGE LOG</h3>
+                    <p style="color: #fff; margin-bottom: 15px; font-size: 0.9rem;">Permanently wipe every email message in the global database.</p>
+                    <button class="send-btn" style="background: #ff2a2a; color: #000; border-color: #ff2a2a; font-weight: bold;" onclick="devPurgeAllMessages()">CLEAR MESSAGE LOG</button>
+                </div>
 
-    <!-- Modify User Funds -->
-    <div style="border: 1px solid #ffcc00; padding: 15px; background: rgba(255, 204, 0, 0.05);">
-        <h3 style="color: #ffcc00; margin-bottom: 5px;">CREDIT / DEBIT USER FUNDS</h3>
-        <p style="color: #fff; margin-bottom: 15px; font-size: 0.9rem;">Add positive values (e.g. 50000) or negative values (e.g. -50000) to any user balance.</p>
-        <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
-            <input type="text" id="dev-target-user" class="compose-input" placeholder="Target Alias (e.g. v or v@cybernet.com)" autocomplete="off">
-            <input type="number" id="dev-funds-amount" class="compose-input" placeholder="Amount €$ (e.g. 100000)" autocomplete="off">
-            <button class="send-btn" style="color: #ffcc00; border-color: #ffcc00; align-self: flex-start;" onclick="devModifyFunds()">MODIFY BALANCE</button>
-        </div>
-    </div>
-</div>
+                <!-- Modify User Funds -->
+                <div style="border: 1px solid #ffcc00; padding: 15px; background: rgba(255, 204, 0, 0.05);">
+                    <h3 style="color: #ffcc00; margin-bottom: 5px;">CREDIT / DEBIT USER FUNDS</h3>
+                    <p style="color: #fff; margin-bottom: 15px; font-size: 0.9rem;">Add positive values (e.g. 50000) or negative values (e.g. -50000) to any user balance.</p>
+                    <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
+                        <input type="text" id="dev-target-user" class="compose-input" placeholder="Target Alias (e.g. v or v@cybernet.com)" autocomplete="off">
+                        <input type="number" id="dev-funds-amount" class="compose-input" placeholder="Amount €$ (e.g. 100000)" autocomplete="off">
+                        <button class="send-btn" style="color: #ffcc00; border-color: #ffcc00; align-self: flex-start;" onclick="devModifyFunds()">MODIFY BALANCE</button>
+                    </div>
+                </div>
+            </div>
+
+        </main> <!-- /main-window closing tag restored -->
+    </div> <!-- /os-container closing tag restored -->
 
     <!-- EXISTING MODALS (Radio, Chat, Weather) -->
     <div id="radio-modal" class="radio-modal hidden">
@@ -223,7 +222,7 @@
         </div>
     </div>
 
-    <!-- NEW: BANK MODAL -->
+    <!-- BANK MODAL -->
     <div id="bank-modal" class="weather-modal hidden">
         <div class="weather-window" style="border-color: #ffcc00; box-shadow: 0 0 15px rgba(255, 204, 0, 0.2);">
             <div class="weather-header" style="background: #ffcc00; color: #000;">
@@ -272,7 +271,6 @@
     </div>
 
     <div id="holocall-ui" class="holocall-container hidden">
-        
         <div class="holocall-frame">
             <img src="assets/CallingImage.jpg" alt="Caller ID" class="holocall-image">
             <div class="holocall-overlay scanlines"></div>
@@ -291,7 +289,6 @@
         <div id="holocall-active-controls" class="holocall-controls hidden">
             <button onclick="hangUp()" class="holo-btn reject-btn">DISCONNECT</button>
         </div>
-
     </div>
     
     <div id="setup-modal" class="setup-modal hidden">

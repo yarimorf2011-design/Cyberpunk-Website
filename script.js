@@ -386,7 +386,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 
-// --- NEW: BANKING & EDDIES SYSTEM ---
+// --- BANKING & EDDIES SYSTEM ---
 
 function openBank() {
     document.getElementById('bank-modal').classList.remove('hidden');
@@ -396,8 +396,6 @@ function closeBank() {
     document.getElementById('bank-modal').classList.add('hidden');
 }
 
-// --- NEW REAL-TIME BANKING ANIMATIONS ---
-// --- BANKING & REAL-TIME BALANCES ---
 let isFirstLoad = true;
 
 function initBankWiretap() {
@@ -426,7 +424,6 @@ function initBankWiretap() {
     });
 }
 
-// Helper function to set display text cleanly
 function updateDisplays(val) {
     const displayString = `${val.toLocaleString()} €$`;
     const topDisplay = document.getElementById('user-funds-display');
@@ -466,7 +463,7 @@ function animateTransactionOverlay(difference) {
     // 1. Clear previous animation classes
     textElement.className = '';
     
-    // 2. FORCE BROWSER REFLOW (This forces the CSS animation to reset to frame 0)
+    // 2. FORCE BROWSER REFLOW
     void textElement.offsetWidth;
 
     // 3. Apply text and re-trigger animation
@@ -654,10 +651,7 @@ async function sendOutboundEmail() {
             read: false,
             attachedFunds: transferAmount
         });
-
-        // The default browser popups have been removed from here!
         
-        // Immediately switches to the Sent folder so the user knows it worked
         switchFolder('sent');
 
     } catch (error) {
@@ -697,7 +691,6 @@ function closeCallPrompt() {
 async function submitCallAlias() {
     let target = document.getElementById('call-target-input').value.toLowerCase().trim();
     
-    // --- NEW: Auto-complete the domain if it's missing ---
     if (target !== '' && !target.includes('@')) {
         target = target + '@cybernet.com';
     }
@@ -876,3 +869,65 @@ function setupPeerConnection(callDoc, isCaller) {
     });
 }
 
+// ==========================================
+// --- DEVELOPER OVERRIDE FUNCTIONS ---
+// ==========================================
+
+async function devPurgeAllMessages() {
+    if (myEmail !== 'yari@cybernet.com') return;
+    
+    if (!confirm("[MAINFRAME WARNING]\nAre you sure you want to permanently delete ALL datashards from the database?")) {
+        return;
+    }
+
+    try {
+        const snapshot = await db.collection("emails").get();
+        const batch = db.batch();
+        
+        snapshot.docs.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+        alert("[MAINFRAME PURGE COMPLETE] All datashards wiped from database.");
+    } catch (error) {
+        console.error("Purge error:", error);
+        alert("[PURGE ERROR] Connection rejected by database ICE.");
+    }
+}
+
+async function devModifyFunds() {
+    if (myEmail !== 'yari@cybernet.com') return;
+
+    let target = document.getElementById('dev-target-user').value.trim().toLowerCase();
+    const amount = parseInt(document.getElementById('dev-funds-amount').value);
+
+    if (!target || isNaN(amount)) {
+        alert("[DEV ERROR] Enter a valid target alias and integer amount.");
+        return;
+    }
+
+    if (!target.includes('@')) {
+        target = target + '@cybernet.com';
+    }
+
+    try {
+        const userRef = db.collection('users').doc(target);
+        const doc = await userRef.get();
+
+        let currentBal = doc.exists ? doc.data().balance : 1000;
+        let newBal = currentBal + amount;
+        if (newBal < 0) newBal = 0;
+
+        await userRef.set({ balance: newBal }, { merge: true });
+        
+        alert(`[TRANSACTION SUCCESSFUL]\nUpdated ${target}'s balance to: ${newBal.toLocaleString()} €$`);
+        
+        document.getElementById('dev-target-user').value = '';
+        document.getElementById('dev-funds-amount').value = '';
+
+    } catch (error) {
+        console.error("Fund modification error:", error);
+        alert("[DEV ERROR] Could not override target account balance.");
+    }
+}
