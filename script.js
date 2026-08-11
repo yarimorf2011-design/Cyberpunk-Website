@@ -744,9 +744,7 @@ async function toggleCamera() {
     if (!peerConnection) return;
     
     const camBtn = document.getElementById('cam-toggle-btn');
-    const localVid = document.getElementById('local-video');
     
-    // CORRECTED: Safely finds the video channel even if it starts empty
     const videoTransceiver = peerConnection.getTransceivers().find(t => t.receiver.track.kind === 'video');
     const videoSender = videoTransceiver ? videoTransceiver.sender : null;
 
@@ -755,11 +753,6 @@ async function toggleCamera() {
             const camStream = await navigator.mediaDevices.getUserMedia({ video: true });
             localVideoTrack = camStream.getVideoTracks()[0];
             
-            // Show local preview Picture-in-Picture
-            localVid.srcObject = new MediaStream([localVideoTrack]);
-            localVid.classList.remove('hidden');
-            
-            // Transmit video to the target
             if (videoSender) {
                 await videoSender.replaceTrack(localVideoTrack);
             }
@@ -777,11 +770,6 @@ async function toggleCamera() {
             localVideoTrack = null;
         }
         
-        // Hide local preview
-        localVid.classList.add('hidden');
-        localVid.srcObject = null;
-        
-        // Stop transmitting to the target
         if (videoSender) {
             await videoSender.replaceTrack(null);
         }
@@ -884,13 +872,6 @@ function stopCallCleanup() {
     document.getElementById('remote-video').classList.add('hidden');
     document.getElementById('holocall-placeholder-img').classList.remove('hidden');
     
-    // Turn off Local PIP preview
-    const localVid = document.getElementById('local-video');
-    if (localVid) {
-        localVid.classList.add('hidden');
-        localVid.srcObject = null;
-    }
-    
     const camBtn = document.getElementById('cam-toggle-btn');
     if (camBtn) {
         camBtn.innerText = "CAM: OFF";
@@ -913,13 +894,15 @@ function stopCallCleanup() {
 }
 
 function setupPeerConnection(callDoc, isCaller) {
-    // Add audio track
     localStream.getTracks().forEach(track => {
         peerConnection.addTrack(track, localStream);
     });
 
-    // Reserve video transceiver for seamless mid-call camera toggling
-    peerConnection.addTransceiver('video', { direction: 'sendrecv' });
+    // BUG FIX: ONLY the caller initializes the transceiver. 
+    // The receiver will automatically inherit it to prevent crossed streams.
+    if (isCaller) {
+        peerConnection.addTransceiver('video', { direction: 'sendrecv' });
+    }
 
     remoteStream = new MediaStream();
     
@@ -931,18 +914,17 @@ function setupPeerConnection(callDoc, isCaller) {
             const remoteVid = document.getElementById('remote-video');
             const placeholderImg = document.getElementById('holocall-placeholder-img');
             
-            const vidStream = new MediaStream([event.track]);
-            remoteVid.srcObject = vidStream;
+            remoteStream.addTrack(event.track);
+            remoteVid.srcObject = remoteStream;
             
+            // Swap placeholder for live video when frames start arriving
             event.track.onunmute = () => {
                 remoteVid.classList.remove('hidden');
                 placeholderImg.classList.add('hidden');
             };
+            
+            // Revert to placeholder if they turn their camera off
             event.track.onmute = () => {
-                remoteVid.classList.add('hidden');
-                placeholderImg.classList.remove('hidden');
-            };
-            event.track.onended = () => {
                 remoteVid.classList.add('hidden');
                 placeholderImg.classList.remove('hidden');
             };
