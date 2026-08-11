@@ -1091,27 +1091,42 @@ body {
 }
 
 /* =========================================
-   --- CONTAINER & TAB LAYOUT REPAIR ---
+   --- LAYOUT ALIGNMENT & HEADER FIXES ---
    ========================================= */
 
-   .os-container {
+/* 1. Force tabs to sit directly on top of the main window */
+.os-container {
     display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
+    flex-direction: column !important; /* Stacks nav above main window */
+    align-items: center !important;    /* Centers the entire OS */
+    width: 90%;
+    max-width: 1100px;
+    margin: 20px auto;
 }
 
+/* 2. Align tabs flush with the left side of the main window */
 .top-nav {
     display: flex !important;
-    flex-direction: row !important;
-    gap: 10px;
-    margin-bottom: -1px;
-    z-index: 2;
+    width: 100% !important;
+    justify-content: flex-start !important;
+    gap: 8px;
+    margin-bottom: -1px; /* Keeps tabs seamless with the top border */
 }
 
-.main-window {
+/* 3. Stop header text ("KEYSTONE" & "NETDIR") from overlapping */
+.window-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
     width: 100% !important;
-    box-sizing: border-box;
+    gap: 15px;
+    padding: 10px 15px;
+}
+
+.window-header .brand {
+    white-space: nowrap;
+}
+
+.window-header .url {
+    white-space: nowrap;
 }
