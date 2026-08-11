@@ -835,15 +835,24 @@ async function answerCall() {
     const callDoc = db.collection('calls').doc(currentCallId);
     const callData = (await callDoc.get()).data();
 
+    // Grab audio immediately
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     document.getElementById('local-audio').srcObject = localStream;
 
     peerConnection = new RTCPeerConnection(rtcConfig);
     setupPeerConnection(callDoc, false);
 
+    // 1. Process the caller's offer
     const offerDescription = callData.offer;
     await peerConnection.setRemoteDescription(new RTCSessionDescription(offerDescription));
 
+    // 2. NETWORK OVERRIDE: Force the video channel to remain open for future uploads
+    const videoTransceiver = peerConnection.getTransceivers().find(t => t.receiver.track.kind === 'video');
+    if (videoTransceiver) {
+        videoTransceiver.direction = 'sendrecv';
+    }
+
+    // 3. Create and send the answer
     const answerDescription = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answerDescription);
 
