@@ -1,0 +1,3 @@
+extract eurodollars: Function { Millitech:extract-eurodollars -- (amount) }
+
+execute command: function { Millitech:execute-recent }

@@ -42,10 +42,10 @@
         }
 
         #code-editor {
-            flex-grow: 1;
+            height: 50%;
             background: #050101;
             border: 1px solid rgba(255, 42, 42, 0.3);
-            color: #33ff33; /* Classic Hacker Green */
+            color: #33ff33; 
             font-family: 'Courier New', Courier, monospace;
             font-size: 1.1rem;
             padding: 20px;
@@ -59,10 +59,23 @@
             box-shadow: inset 0 0 20px rgba(255, 42, 42, 0.1);
         }
 
+        /* NEW: Terminal Output Log */
+        #terminal-output {
+            height: 40%;
+            background: #020000;
+            border: 1px solid rgba(255, 42, 42, 0.2);
+            color: #ff2a2a;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            padding: 15px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
         /* Custom green scrollbar for the terminal */
-        #code-editor::-webkit-scrollbar { width: 8px; }
-        #code-editor::-webkit-scrollbar-track { background: transparent; }
-        #code-editor::-webkit-scrollbar-thumb { background: #33ff33; }
+        #code-editor::-webkit-scrollbar, #terminal-output::-webkit-scrollbar { width: 8px; }
+        #code-editor::-webkit-scrollbar-track, #terminal-output::-webkit-scrollbar-track { background: transparent; }
+        #code-editor::-webkit-scrollbar-thumb, #terminal-output::-webkit-scrollbar-thumb { background: #33ff33; }
 
         .terminal-controls {
             display: flex;
@@ -78,26 +91,24 @@
             transition: 0.2s;
         }
 
-        .return-btn {
-            background: transparent;
-            border: 1px solid var(--cyan);
-            color: var(--cyan);
-        }
-        .return-btn:hover {
-            background: var(--cyan);
-            color: #000;
-            box-shadow: 0 0 15px var(--cyan);
-        }
+        .return-btn { background: transparent; border: 1px solid var(--cyan); color: var(--cyan); }
+        .return-btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 15px var(--cyan); }
 
-        .exec-btn {
-            background: rgba(255, 42, 42, 0.1);
-            border: 1px solid #ff2a2a;
-            color: #ff2a2a;
+        .exec-btn { background: rgba(255, 42, 42, 0.1); border: 1px solid #ff2a2a; color: #ff2a2a; }
+        .exec-btn:hover { background: #ff2a2a; color: #000; box-shadow: 0 0 15px #ff2a2a; }
+
+        /* Hacking Target Modal */
+        .target-modal {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #0a0000; border: 2px solid #ff2a2a; padding: 20px;
+            box-shadow: 0 0 30px rgba(255, 42, 42, 0.5); z-index: 100;
+            display: flex; flex-direction: column; gap: 15px; text-align: center;
         }
-        .exec-btn:hover {
-            background: #ff2a2a;
-            color: #000;
-            box-shadow: 0 0 15px #ff2a2a;
+        
+        .ghost-window {
+            position: fixed; border: 1px solid #33ff33; background: rgba(0,20,0,0.9);
+            color: #33ff33; font-family: monospace; padding: 10px; z-index: 9999;
+            box-shadow: 0 0 15px #33ff33; pointer-events: none;
         }
     </style>
 </head>
@@ -106,32 +117,155 @@
     
     <div class="terminal-container">
         <div class="terminal-header">
-            <span>⬢ ICE_BREAKER_COMPILER_V1.0</span>
+            <span>⬢ ICE_BREAKER_COMPILER_V1.1</span>
             <span>NODE: LOCALHOST</span>
         </div>
         
         <div class="editor-area">
+            <!-- Input Area -->
             <textarea id="code-editor" spellcheck="false" placeholder="// INIT NETRUNNER PROTOCOL&#10;// INPUT CUSTOM SYNTAX..."></textarea>
             
+            <!-- Output Log Area -->
+            <div id="terminal-output">
+                > SYSTEM READY.<br>> AWAITING PROTOCOL EXECUTION...
+            </div>
+
             <div class="terminal-controls">
                 <button class="action-btn return-btn" onclick="window.location.href='index.html'">[ ABORT / RETURN TO OS ]</button>
                 <button class="action-btn exec-btn" onclick="compileCode()">[ EXECUTE PROTOCOL ]</button>
             </div>
         </div>
+
+        <!-- Hidden Target Modal -->
+        <div id="target-modal" class="target-modal" style="display: none;">
+            <span style="color: #ff2a2a; font-weight: bold; font-family: monospace;">[ ENTER TARGET ALIAS TO EXTRACT FROM ]</span>
+            <input type="text" id="target-input" style="background: transparent; border: 1px solid #ff2a2a; color: #ff2a2a; padding: 10px; font-family: monospace; outline: none;" autocomplete="off">
+            <button class="action-btn exec-btn" onclick="lockTarget()">LOCK TARGET</button>
+        </div>
     </div>
 
+    <!-- FIREBASE DB CONNECTION -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <script>
-        // Placeholder function for your future custom coding language!
+        // Init Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrLr7l2F89qzqV3Xmn1P6NLJ6nl_HSOPU",
+            authDomain: "keystone-cybernet.firebaseapp.com",
+            databaseURL: "https://keystone-cybernet-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "keystone-cybernet",
+            storageBucket: "keystone-cybernet.firebasestorage.app",
+            messagingSenderId: "510405488684",
+            appId: "1:510405488684:web:db3b484dbfa013e665a189"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const myEmail = localStorage.getItem('cybernetEmail');
+
+        let pendingHackAmount = 0;
+        let pendingTarget = "";
+
+        function logToTerminal(text) {
+            const out = document.getElementById('terminal-output');
+            out.innerHTML += `<br>${text}`;
+            out.scrollTop = out.scrollHeight;
+        }
+
         function compileCode() {
             const code = document.getElementById('code-editor').value;
             
-            if (code.trim() === '') {
-                alert("[COMPILER ERROR] No syntax detected.");
-                return;
+            // Regex matchers for your custom syntax
+            const extractRegex = /function\s*\{\s*Millitech:extract-eurodollars\s*--\s*(\d+)\s*\}/i;
+            const executeRegex = /function\s*\{\s*Millitech:execute-recent\s*\}/i;
+
+            const extractMatch = code.match(extractRegex);
+            const executeMatch = code.match(executeRegex);
+
+            // Phase 1: They typed the extract command, but haven't executed it yet
+            if (extractMatch && !executeMatch) {
+                pendingHackAmount = parseInt(extractMatch[1]);
+                document.getElementById('target-modal').style.display = 'flex';
+                document.getElementById('target-input').focus();
+            } 
+            // Phase 2: They locked the target and typed the execute command
+            else if (executeMatch && pendingTarget !== "" && pendingHackAmount > 0) {
+                runHackAnimation();
+            } 
+            else {
+                logToTerminal("> <span style='color: #ff2a2a;'>[ERR] INVALID SYNTAX OR MISSING TARGET.</span>");
+            }
+        }
+
+        function lockTarget() {
+            let target = document.getElementById('target-input').value.trim().toLowerCase();
+            if (target !== '' && !target.includes('@')) {
+                target = target + '@cybernet.com';
             }
             
-            // For now, it just shows a success popup
-            alert("[ICE BREAKER INITIATED]\nCompiling custom syntax...\n\nResult: BYPASS SUCCESSFUL.");
+            if(target !== '') {
+                pendingTarget = target;
+                document.getElementById('target-modal').style.display = 'none';
+                logToTerminal(`> TARGET LOCKED: ${pendingTarget}. Awaiting Execution Protocol...`);
+            }
+        }
+
+        async function runHackAnimation() {
+            const btn = document.querySelector('.exec-btn');
+            btn.disabled = true;
+            btn.innerText = "[ BREACHING ICE... ]";
+
+            // The cool visual hacking sequence
+            for(let i=0; i<15; i++) {
+                await new Promise(r => setTimeout(r, 100));
+                logToTerminal(`> OVERRIDING SUBNET 0x${Math.floor(Math.random()*99999)}... bypassed.`);
+                
+                // Spawn fake ghost windows randomly
+                if(i % 3 === 0) spawnGhostWindow();
+            }
+
+            // Transfer the funds via Firebase Transaction
+            try {
+                const senderRef = db.collection('users').doc(pendingTarget);
+                const receiverRef = db.collection('users').doc(myEmail);
+
+                await db.runTransaction(async (transaction) => {
+                    const senderDoc = await transaction.get(senderRef);
+                    const receiverDoc = await transaction.get(receiverRef);
+
+                    let senderBalance = senderDoc.exists ? senderDoc.data().balance : 1000;
+                    let receiverBalance = receiverDoc.exists ? receiverDoc.data().balance : 1000;
+
+                    // Netrunners steal it even if it puts the target in the negative!
+                    transaction.set(senderRef, { balance: senderBalance - pendingHackAmount }, { merge: true });
+                    transaction.set(receiverRef, { balance: receiverBalance + pendingHackAmount }, { merge: true });
+                });
+
+                // Final Yellow Success Text
+                logToTerminal(`<br><span style="color: #ffcc00; font-weight: bold; font-size: 1.2rem;">> extracted ${pendingHackAmount} €$ from ${pendingTarget}</span>`);
+                
+                // Clear pending hack so they have to type it again
+                pendingHackAmount = 0;
+                pendingTarget = "";
+
+            } catch (error) {
+                console.error(error);
+                logToTerminal("> <span style='color: #ff2a2a;'>[ERR] NETWATCH BLOCKED THE TRANSFER.</span>");
+            }
+
+            btn.disabled = false;
+            btn.innerText = "[ EXECUTE PROTOCOL ]";
+        }
+
+        // Creates a random glitchy window on the screen that auto-deletes
+        function spawnGhostWindow() {
+            let win = document.createElement('div');
+            win.className = 'ghost-window';
+            win.style.top = (10 + Math.random() * 70) + '%';
+            win.style.left = (10 + Math.random() * 70) + '%';
+            win.innerHTML = `> DATAMINE ACTIVE<br>> DECRYPTING: ${Math.random().toString(36).substring(2, 10)}<br>> [ACCESS GRANTED]`;
+            document.body.appendChild(win);
+            setTimeout(() => win.remove(), 800 + Math.random() * 1000);
         }
     </script>
 </body>
