@@ -1167,7 +1167,7 @@ video.holocall-image {
 
 /* --- NETRUNNER TERMINAL APP --- */
 #icon-Terminal {
-    background-color: #ff2a2a; 
+    background-color: rgba(80, 255, 240, 0.8);; 
     /* Add a custom icon to your assets folder if you want! */
     background-image: url('assets/TerminalIcon.png'); 
     background-size: cover;
@@ -1175,6 +1175,6 @@ video.holocall-image {
 }
 
 #icon-Terminal:hover {
-    box-shadow: 0 0 20px rgba(255, 42, 42, 0.8);
-    border-color: #ff2a2a;
+    box-shadow: 0 0 20px rgba(80, 255, 240, 0.8);;
+    border-color: rgba(80, 255, 240, 0.8);;
 }
