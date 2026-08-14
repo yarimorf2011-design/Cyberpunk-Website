@@ -43,7 +43,7 @@
         }
 
         #code-editor {
-            flex: 3 1 0%;
+            flex: 3 1 0%; 
             min-height: 0; 
             background: #010501;
             border: 1px solid rgba(51, 255, 51, 0.3);
@@ -99,6 +99,7 @@
         .exec-btn { background: rgba(51, 255, 51, 0.1); border: 1px solid #33ff33; color: #33ff33; }
         .exec-btn:hover { background: #33ff33; color: #000; box-shadow: 0 0 15px #33ff33; }
 
+        /* Modals */
         .target-modal {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #050a05; border: 2px solid #33ff33; padding: 20px;
@@ -106,6 +107,32 @@
             display: flex; flex-direction: column; gap: 15px; text-align: center;
         }
         
+        /* NEW: Red Spoofing Modal Theme */
+        .spoof-theme {
+            background: #0a0000;
+            border-color: #ff2a2a !important;
+            box-shadow: 0 0 30px rgba(255, 42, 42, 0.5) !important;
+            width: 400px;
+        }
+
+        .spoof-input {
+            background: rgba(255, 42, 42, 0.05);
+            border: 1px solid #ff2a2a;
+            color: #ff2a2a;
+            padding: 10px;
+            font-family: monospace;
+            outline: none;
+            width: 100%;
+        }
+        
+        .spoof-input::placeholder { color: rgba(255, 42, 42, 0.5); }
+        .spoof-textarea { resize: none; height: 100px; }
+        
+        .spoof-btn {
+            background: rgba(255, 42, 42, 0.1); border: 1px solid #ff2a2a; color: #ff2a2a; margin-top: 5px;
+        }
+        .spoof-btn:hover { background: #ff2a2a; color: #000; box-shadow: 0 0 15px #ff2a2a; }
+
         .ghost-window {
             position: fixed; border: 1px solid #33ff33; background: rgba(0,20,0,0.9);
             color: #33ff33; font-family: monospace; padding: 10px; z-index: 9999;
@@ -118,7 +145,7 @@
     
     <div class="terminal-container">
         <div class="terminal-header">
-            <span>⬢ ICE_BREAKER_COMPILER_V1.3</span>
+            <span>⬢ ICE_BREAKER_COMPILER_V1.4</span>
             <span>NODE: LOCALHOST</span>
         </div>
         
@@ -135,10 +162,20 @@
             </div>
         </div>
 
+        <!-- Hidden Target Modal (Money Extraction) -->
         <div id="target-modal" class="target-modal" style="display: none;">
             <span style="color: #33ff33; font-weight: bold; font-family: monospace;">[ ENTER TARGET ALIAS TO EXTRACT FROM ]</span>
             <input type="text" id="target-input" onkeydown="handleTargetEnter(event)" style="background: transparent; border: 1px solid #33ff33; color: #33ff33; padding: 10px; font-family: monospace; outline: none;" autocomplete="off">
             <button class="action-btn exec-btn" onclick="lockTarget()">LOCK TARGET</button>
+        </div>
+
+        <!-- NEW: Hidden Spoof Modal (Message Injection) -->
+        <div id="spoof-modal" class="target-modal spoof-theme" style="display: none;">
+            <span style="color: #ff2a2a; font-weight: bold; font-family: monospace; margin-bottom: 5px;">[ OVERRIDE COMMS NETWORK ]</span>
+            <input type="text" id="spoof-sender" placeholder="SPOOF SENDER (e.g., boss@cybernet.com)" class="spoof-input" autocomplete="off">
+            <input type="text" id="spoof-receiver" placeholder="TARGET RECEIVER (e.g., v@cybernet.com)" class="spoof-input" autocomplete="off">
+            <textarea id="spoof-message" placeholder="ENTER FORGED DATASTREAM..." class="spoof-input spoof-textarea"></textarea>
+            <button class="action-btn spoof-btn" onclick="lockSpoof()">ENCODE PAYLOAD</button>
         </div>
     </div>
 
@@ -147,7 +184,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Init Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCrLr7l2F89qzqV3Xmn1P6NLJ6nl_HSOPU",
             authDomain: "keystone-cybernet.firebaseapp.com",
@@ -168,8 +204,17 @@
         
         const myEmail = localStorage.getItem('cybernetEmail') || "unknown@cybernet.com";
 
+        // Global Trackers
+        let activeHackMode = null; // Can be 'money' or 'message'
+        
+        // Money Trackers
         let pendingHackAmount = 0;
         let pendingTarget = "";
+
+        // Message Trackers
+        let pendingSpoofSender = "";
+        let pendingSpoofReceiver = "";
+        let pendingSpoofMessage = "";
 
         function logToTerminal(text) {
             const out = document.getElementById('terminal-output');
@@ -177,17 +222,12 @@
             out.scrollTop = out.scrollHeight;
         }
 
-        // --- BULLETPROOF ENTER KEY LOGIC ---
         function handleEditorEnter(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Stop default jump
-                
-                // Add the newline FIRST, so it moves down visually
+                event.preventDefault(); 
                 const editor = document.getElementById('code-editor');
                 editor.value += '\n';
                 editor.scrollTop = editor.scrollHeight;
-                
-                // Then immediately execute the code
                 compileCode(); 
             }
         }
@@ -202,43 +242,82 @@
         function compileCode() {
             const code = document.getElementById('code-editor').value;
             
-            // Highly forgiving syntax matchers (ignores case, spacing, and parentheses)
+            // Syntax Matchers
             const extractRegex = /milli?tech:extract-eurodollars\s*[-]*\s*\(?(\d+)\)?/i;
+            const spoofRegex = /milli?tech:send-usermessage/i;
             const executeRegex = /milli?tech:execute-recent/i;
 
             const extractMatch = code.match(extractRegex);
+            const spoofMatch = code.match(spoofRegex);
             const executeMatch = code.match(executeRegex);
 
-            // Phase 1: Ensure we have a target if they typed an extract command
-            if (extractMatch && pendingTarget === "") {
+            // Phase 1a: Money Hack Initiated
+            if (extractMatch && activeHackMode !== 'message' && pendingTarget === "") {
+                activeHackMode = 'money';
                 pendingHackAmount = parseInt(extractMatch[1]);
                 document.getElementById('target-modal').style.display = 'flex';
                 document.getElementById('target-input').focus();
             } 
-            // Phase 2: Target is locked, Execute command is present
-            else if (executeMatch && pendingTarget !== "" && pendingHackAmount > 0) {
-                runHackAnimation();
+            // Phase 1b: Message Hack Initiated
+            else if (spoofMatch && activeHackMode !== 'money' && pendingSpoofReceiver === "") {
+                activeHackMode = 'message';
+                document.getElementById('spoof-modal').style.display = 'flex';
+                document.getElementById('spoof-sender').focus();
+            }
+            // Phase 2: Execute command detected
+            else if (executeMatch) {
+                if (activeHackMode === 'money' && pendingTarget !== "") {
+                    runHackAnimation();
+                } else if (activeHackMode === 'message' && pendingSpoofReceiver !== "") {
+                    runHackAnimation();
+                } else {
+                    logToTerminal("> <span style='color: #ff2a2a;'>[ERR] PENDING HACK INCOMPLETE. COMPLETE PARAMS FIRST.</span>");
+                }
             } 
-            // If nothing valid was typed
-            else if (!extractMatch && code.trim() !== "") {
+            else if (!extractMatch && !spoofMatch && code.trim() !== "") {
                 logToTerminal("> <span style='color: #ff2a2a;'>[ERR] INVALID SYNTAX DETECTED.</span>");
             }
         }
 
+        // Locks target for Money extraction
         function lockTarget() {
             let target = document.getElementById('target-input').value.trim().toLowerCase();
-            if (target !== '' && !target.includes('@')) {
-                target = target + '@cybernet.com';
-            }
+            if (target !== '' && !target.includes('@')) target += '@cybernet.com';
             
             if(target !== '') {
                 pendingTarget = target;
                 document.getElementById('target-modal').style.display = 'none';
                 logToTerminal(`> <span style="color: #33ff33;">TARGET LOCKED: ${pendingTarget}.</span> Awaiting Execution Protocol...`);
                 document.getElementById('target-input').value = ''; 
-                
-                // Return typing focus to the main editor automatically
                 document.getElementById('code-editor').focus();
+            }
+        }
+
+        // Locks parameters for Message spoofing
+        function lockSpoof() {
+            let sender = document.getElementById('spoof-sender').value.trim().toLowerCase();
+            let receiver = document.getElementById('spoof-receiver').value.trim().toLowerCase();
+            let message = document.getElementById('spoof-message').value.trim();
+
+            if (sender !== '' && !sender.includes('@')) sender += '@cybernet.com';
+            if (receiver !== '' && !receiver.includes('@')) receiver += '@cybernet.com';
+
+            if (sender !== '' && receiver !== '' && message !== '') {
+                pendingSpoofSender = sender;
+                pendingSpoofReceiver = receiver;
+                pendingSpoofMessage = message;
+
+                document.getElementById('spoof-modal').style.display = 'none';
+                logToTerminal(`> <span style="color: #ff2a2a;">PAYLOAD ENCODED: SPOOFING TO ${receiver}.</span> Awaiting Execution Protocol...`);
+                
+                // Clear out inputs for next time
+                document.getElementById('spoof-sender').value = '';
+                document.getElementById('spoof-receiver').value = '';
+                document.getElementById('spoof-message').value = '';
+
+                document.getElementById('code-editor').focus();
+            } else {
+                alert("[SYSTEM ERR] All fields required to generate payload.");
             }
         }
 
@@ -247,46 +326,74 @@
             btn.disabled = true;
             btn.innerText = "[ BREACHING ICE... ]";
 
-            // The chaotic visual hacking sequence
+            // Visual hacking sequence
             for(let i=0; i<15; i++) {
                 await new Promise(r => setTimeout(r, 100));
-                logToTerminal(`> OVERRIDING SUBNET 0x${Math.floor(Math.random()*99999)}... <span style="color:#33ff33;">bypassed.</span>`);
+                
+                if (activeHackMode === 'money') {
+                    logToTerminal(`> OVERRIDING SUBNET 0x${Math.floor(Math.random()*99999)}... <span style="color:#33ff33;">bypassed.</span>`);
+                } else {
+                    logToTerminal(`> INJECTING PACKET 0x${Math.floor(Math.random()*99999)}... <span style="color:#ff2a2a;">forced.</span>`);
+                }
                 
                 if(i % 3 === 0) spawnGhostWindow();
             }
 
-            // Transfer the funds via Firebase Transaction
+            // FIREBASE EXECUTION
             try {
-                const senderRef = db.collection('users').doc(pendingTarget);
-                const receiverRef = db.collection('users').doc(myEmail);
+                if (activeHackMode === 'money') {
+                    // RUN MONEY LOGIC
+                    const senderRef = db.collection('users').doc(pendingTarget);
+                    const receiverRef = db.collection('users').doc(myEmail);
 
-                await db.runTransaction(async (transaction) => {
-                    const senderDoc = await transaction.get(senderRef);
-                    const receiverDoc = await transaction.get(receiverRef);
+                    await db.runTransaction(async (transaction) => {
+                        const senderDoc = await transaction.get(senderRef);
+                        const receiverDoc = await transaction.get(receiverRef);
 
-                    let senderBalance = senderDoc.exists ? senderDoc.data().balance : 1000;
-                    let receiverBalance = receiverDoc.exists ? receiverDoc.data().balance : 1000;
+                        let senderBalance = senderDoc.exists ? senderDoc.data().balance : 1000;
+                        let receiverBalance = receiverDoc.exists ? receiverDoc.data().balance : 1000;
 
-                    transaction.set(senderRef, { 
-                        balance: senderBalance - pendingHackAmount,
-                        wasHacked: Date.now() 
-                    }, { merge: true });
-                    
-                    transaction.set(receiverRef, { 
-                        balance: receiverBalance + pendingHackAmount 
-                    }, { merge: true });
-                });
+                        transaction.set(senderRef, { 
+                            balance: senderBalance - pendingHackAmount,
+                            wasHacked: Date.now() 
+                        }, { merge: true });
+                        
+                        transaction.set(receiverRef, { 
+                            balance: receiverBalance + pendingHackAmount 
+                        }, { merge: true });
+                    });
 
-                logToTerminal(`<br><span style="color: #ffcc00; font-weight: bold; font-size: 1.2rem;">> extracted ${pendingHackAmount} €$ from ${pendingTarget}</span>`);
-                
-                // Reset for the next hack
+                    logToTerminal(`<br><span style="color: #ffcc00; font-weight: bold; font-size: 1.2rem;">> extracted ${pendingHackAmount} €$ from ${pendingTarget}</span>`);
+
+                } else if (activeHackMode === 'message') {
+                    // RUN SPOOF LOGIC
+                    await db.collection("emails").add({
+                        from: pendingSpoofSender,
+                        to: pendingSpoofReceiver,
+                        participants: [pendingSpoofSender, pendingSpoofReceiver],
+                        subject: "CLASSIFIED DATASHARD",
+                        body: pendingSpoofMessage,
+                        timestamp: Date.now(),
+                        read: false,
+                        attachedFunds: 0
+                    });
+
+                    logToTerminal(`<br><span style="color: #ff2a2a; font-weight: bold; font-size: 1.2rem;">> SPOOF SUCCESSFUL. COMMS INJECTED TO ${pendingSpoofReceiver}</span>`);
+                }
+
+                // Reset all states after successful hack
+                activeHackMode = null;
                 pendingHackAmount = 0;
                 pendingTarget = "";
+                pendingSpoofSender = "";
+                pendingSpoofReceiver = "";
+                pendingSpoofMessage = "";
                 document.getElementById('code-editor').value = ""; 
 
             } catch (error) {
                 console.error(error);
-                logToTerminal("> <span style='color: #ff2a2a;'>[ERR] NETWATCH BLOCKED THE TRANSFER.</span>");
+                logToTerminal("> <span style='color: #ff2a2a;'>[ERR] ICE BREAKER FAILED. CONNECTION SEVERED.</span>");
+                activeHackMode = null; // Reset on fail so they can try again
             }
 
             btn.disabled = false;
@@ -303,6 +410,13 @@
             const randomScale = (0.5 + Math.random() * 2).toFixed(2);
             win.style.transform = `scale(${randomScale})`;
             win.style.zIndex = Math.floor(9000 + Math.random() * 1000);
+
+            // Turn ghosts red if we are in message hacking mode
+            if (activeHackMode === 'message') {
+                win.style.color = '#ff2a2a';
+                win.style.borderColor = '#ff2a2a';
+                win.style.boxShadow = '0 0 15px #ff2a2a';
+            }
 
             win.innerHTML = `> DATAMINE ACTIVE<br>> DECRYPTING: ${Math.random().toString(36).substring(2, 10)}<br>> [ACCESS GRANTED]`;
             document.body.appendChild(win);
