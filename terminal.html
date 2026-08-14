@@ -33,19 +33,18 @@
             justify-content: space-between;
         }
 
-        /* FLEXBOX FIX FOR OVERFLOW */
         .editor-area {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             padding: 20px;
             gap: 15px;
-            overflow: hidden; /* Keeps everything locked inside */
+            overflow: hidden; 
         }
 
         #code-editor {
-            flex-grow: 3; /* Takes up 3 parts of the space */
-            min-height: 0; /* Prevents overflow pushing the box out */
+            flex-grow: 3; 
+            min-height: 0; 
             background: #010501;
             border: 1px solid rgba(51, 255, 51, 0.3);
             color: #33ff33; 
@@ -62,13 +61,12 @@
             box-shadow: inset 0 0 20px rgba(51, 255, 51, 0.1);
         }
 
-        /* Terminal Output Log */
         #terminal-output {
-            flex-grow: 2; /* Takes up 2 parts of the space */
-            min-height: 0; /* Forces scrollbar instead of breaking borders */
+            flex-grow: 2; 
+            min-height: 0; 
             background: #000000;
             border: 1px solid rgba(51, 255, 51, 0.3);
-            color: #ffffff; /* White text for console logs */
+            color: #ffffff; 
             font-family: 'Courier New', Courier, monospace;
             font-size: 1rem;
             padding: 15px;
@@ -76,7 +74,6 @@
             line-height: 1.4;
         }
 
-        /* Custom green scrollbars */
         #code-editor::-webkit-scrollbar, #terminal-output::-webkit-scrollbar { width: 8px; }
         #code-editor::-webkit-scrollbar-track, #terminal-output::-webkit-scrollbar-track { background: transparent; }
         #code-editor::-webkit-scrollbar-thumb, #terminal-output::-webkit-scrollbar-thumb { background: #33ff33; }
@@ -84,7 +81,7 @@
         .terminal-controls {
             display: flex;
             justify-content: space-between;
-            flex-shrink: 0; /* Prevents buttons from squishing */
+            flex-shrink: 0; 
         }
 
         .action-btn {
@@ -102,7 +99,6 @@
         .exec-btn { background: rgba(51, 255, 51, 0.1); border: 1px solid #33ff33; color: #33ff33; }
         .exec-btn:hover { background: #33ff33; color: #000; box-shadow: 0 0 15px #33ff33; }
 
-        /* Hacking Target Modal */
         .target-modal {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #050a05; border: 2px solid #33ff33; padding: 20px;
@@ -122,15 +118,13 @@
     
     <div class="terminal-container">
         <div class="terminal-header">
-            <span>⬢ ICE_BREAKER_COMPILER_V1.2</span>
+            <span>⬢ ICE_BREAKER_COMPILER_V1.3</span>
             <span>NODE: LOCALHOST</span>
         </div>
         
         <div class="editor-area">
-            <!-- Input Area (Added keydown listener for ENTER key) -->
             <textarea id="code-editor" spellcheck="false" placeholder="// INIT NETRUNNER PROTOCOL&#10;// INPUT CUSTOM SYNTAX..." onkeydown="handleEditorEnter(event)"></textarea>
             
-            <!-- Output Log Area -->
             <div id="terminal-output">
                 <span style="color: #33ff33;">> SYSTEM READY.</span><br>> AWAITING PROTOCOL EXECUTION...
             </div>
@@ -141,7 +135,6 @@
             </div>
         </div>
 
-        <!-- Hidden Target Modal (Added keydown listener for ENTER key) -->
         <div id="target-modal" class="target-modal" style="display: none;">
             <span style="color: #33ff33; font-weight: bold; font-family: monospace;">[ ENTER TARGET ALIAS TO EXTRACT FROM ]</span>
             <input type="text" id="target-input" onkeydown="handleTargetEnter(event)" style="background: transparent; border: 1px solid #33ff33; color: #33ff33; padding: 10px; font-family: monospace; outline: none;" autocomplete="off">
@@ -164,9 +157,16 @@
             messagingSenderId: "510405488684",
             appId: "1:510405488684:web:db3b484dbfa013e665a189"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const myEmail = localStorage.getItem('cybernetEmail');
+        
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        } catch (e) {
+            console.error("Firebase init bypass:", e);
+        }
+        
+        const myEmail = localStorage.getItem('cybernetEmail') || "unknown@cybernet.com";
 
         let pendingHackAmount = 0;
         let pendingTarget = "";
@@ -177,13 +177,68 @@
             out.scrollTop = out.scrollHeight;
         }
 
-       // --- KEYBOARD LISTENERS FIX ---
-       function handleEditorEnter(event) {
-            // Allows the Enter key to move to the next line natively before executing
+        // --- BULLETPROOF ENTER KEY LOGIC ---
+        function handleEditorEnter(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
-                setTimeout(() => {
-                    compileCode();
-                }, 10);
+                event.preventDefault(); // Stop default jump
+                
+                // Add the newline FIRST, so it moves down visually
+                const editor = document.getElementById('code-editor');
+                editor.value += '\n';
+                editor.scrollTop = editor.scrollHeight;
+                
+                // Then immediately execute the code
+                compileCode(); 
+            }
+        }
+
+        function handleTargetEnter(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                lockTarget();
+            }
+        }
+
+        function compileCode() {
+            const code = document.getElementById('code-editor').value;
+            
+            // Highly forgiving syntax matchers (ignores case, spacing, and parentheses)
+            const extractRegex = /milli?tech:extract-eurodollars\s*[-]*\s*\(?(\d+)\)?/i;
+            const executeRegex = /milli?tech:execute-recent/i;
+
+            const extractMatch = code.match(extractRegex);
+            const executeMatch = code.match(executeRegex);
+
+            // Phase 1: Ensure we have a target if they typed an extract command
+            if (extractMatch && pendingTarget === "") {
+                pendingHackAmount = parseInt(extractMatch[1]);
+                document.getElementById('target-modal').style.display = 'flex';
+                document.getElementById('target-input').focus();
+            } 
+            // Phase 2: Target is locked, Execute command is present
+            else if (executeMatch && pendingTarget !== "" && pendingHackAmount > 0) {
+                runHackAnimation();
+            } 
+            // If nothing valid was typed
+            else if (!extractMatch && code.trim() !== "") {
+                logToTerminal("> <span style='color: #ff2a2a;'>[ERR] INVALID SYNTAX DETECTED.</span>");
+            }
+        }
+
+        function lockTarget() {
+            let target = document.getElementById('target-input').value.trim().toLowerCase();
+            if (target !== '' && !target.includes('@')) {
+                target = target + '@cybernet.com';
+            }
+            
+            if(target !== '') {
+                pendingTarget = target;
+                document.getElementById('target-modal').style.display = 'none';
+                logToTerminal(`> <span style="color: #33ff33;">TARGET LOCKED: ${pendingTarget}.</span> Awaiting Execution Protocol...`);
+                document.getElementById('target-input').value = ''; 
+                
+                // Return typing focus to the main editor automatically
+                document.getElementById('code-editor').focus();
             }
         }
 
@@ -192,12 +247,11 @@
             btn.disabled = true;
             btn.innerText = "[ BREACHING ICE... ]";
 
-            // The cool visual hacking sequence
+            // The chaotic visual hacking sequence
             for(let i=0; i<15; i++) {
                 await new Promise(r => setTimeout(r, 100));
                 logToTerminal(`> OVERRIDING SUBNET 0x${Math.floor(Math.random()*99999)}... <span style="color:#33ff33;">bypassed.</span>`);
                 
-                // Spawn fake ghost windows randomly
                 if(i % 3 === 0) spawnGhostWindow();
             }
 
@@ -213,10 +267,9 @@
                     let senderBalance = senderDoc.exists ? senderDoc.data().balance : 1000;
                     let receiverBalance = receiverDoc.exists ? receiverDoc.data().balance : 1000;
 
-                    // Netrunners steal it and flag the victim's OS with a hack timestamp!
                     transaction.set(senderRef, { 
                         balance: senderBalance - pendingHackAmount,
-                        wasHacked: Date.now() // <--- THIS TRIGGERS THE RED ALARM
+                        wasHacked: Date.now() 
                     }, { merge: true });
                     
                     transaction.set(receiverRef, { 
@@ -224,13 +277,12 @@
                     }, { merge: true });
                 });
 
-                // Final Yellow Success Text
                 logToTerminal(`<br><span style="color: #ffcc00; font-weight: bold; font-size: 1.2rem;">> extracted ${pendingHackAmount} €$ from ${pendingTarget}</span>`);
                 
-                // Clear pending hack
+                // Reset for the next hack
                 pendingHackAmount = 0;
                 pendingTarget = "";
-                document.getElementById('code-editor').value = ""; // Auto-clear code window
+                document.getElementById('code-editor').value = ""; 
 
             } catch (error) {
                 console.error(error);
@@ -242,14 +294,12 @@
             document.getElementById('code-editor').focus();
         }
 
-        // --- RANDOM SIZED GHOST WINDOWS ---
         function spawnGhostWindow() {
             let win = document.createElement('div');
             win.className = 'ghost-window';
             win.style.top = (5 + Math.random() * 80) + '%';
             win.style.left = (5 + Math.random() * 80) + '%';
             
-            // Randomize Size (between 0.5x and 2.5x scale)
             const randomScale = (0.5 + Math.random() * 2).toFixed(2);
             win.style.transform = `scale(${randomScale})`;
             win.style.zIndex = Math.floor(9000 + Math.random() * 1000);
