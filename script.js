@@ -398,32 +398,57 @@ function closeBank() {
     document.getElementById('bank-modal').classList.add('hidden');
 }
 
+// --- BANKING & EDDIES SYSTEM ---
 let isFirstLoad = true;
+let lastHackedTimestamp = null; // NEW: Tracks recent attacks
 
 function initBankWiretap() {
     const userDocRef = db.collection('users').doc(myEmail);
     
     userDocRef.onSnapshot(doc => {
         if (doc.exists) {
-            const newBalance = doc.data().balance;
+            const data = doc.data();
+            const newBalance = data.balance;
             
+            // --- HACK DETECTION ---
+            if (data.wasHacked && data.wasHacked !== lastHackedTimestamp) {
+                // Ensure it's a fresh hack and not old data from yesterday
+                if (lastHackedTimestamp !== null || (Date.now() - data.wasHacked < 5000)) {
+                    triggerHackAlarm(); // Trigger the red visual override
+                }
+                lastHackedTimestamp = data.wasHacked;
+            }
+
             if (isFirstLoad) {
-                // FIRST BOOT: Set displays silently with no overlay or counting animation
                 isFirstLoad = false;
                 currentFunds = newBalance;
                 updateDisplays(newBalance);
+                lastHackedTimestamp = data.wasHacked || null;
             } else if (currentFunds !== newBalance) {
-                // LIVE TRANSACTION: Only animate when balance changes mid-session
                 const difference = newBalance - currentFunds;
                 animateTransactionOverlay(difference);
                 animateCounter(currentFunds, newBalance);
                 currentFunds = newBalance;
             }
         } else {
-            // New account creation fallback
             userDocRef.set({ balance: 1000 }).catch(e => console.error(e));
         }
     });
+}
+
+function triggerHackAlarm() {
+    // Force the whole OS into RED mode
+    document.body.classList.add('hacked-theme');
+    
+    // Add flashing text to the top headers
+    const headers = document.querySelectorAll('.brand, .url');
+    headers.forEach(el => el.classList.add('blink-text'));
+
+    // Automatically recover after 10 seconds
+    setTimeout(() => {
+        document.body.classList.remove('hacked-theme');
+        headers.forEach(el => el.classList.remove('blink-text'));
+    }, 10000);
 }
 
 function updateDisplays(val) {

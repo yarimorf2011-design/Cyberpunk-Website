@@ -177,58 +177,13 @@
             out.scrollTop = out.scrollHeight;
         }
 
-        // --- NEW KEYBOARD LISTENERS ---
-        function handleEditorEnter(event) {
-            // Execute on ENTER. Allows normal new lines if SHIFT is held.
+       // --- KEYBOARD LISTENERS FIX ---
+       function handleEditorEnter(event) {
+            // Allows the Enter key to move to the next line natively before executing
             if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Stops the textarea from just pushing text down
-                compileCode();
-            }
-        }
-
-        function handleTargetEnter(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                lockTarget();
-            }
-        }
-
-        function compileCode() {
-            const code = document.getElementById('code-editor').value;
-            
-            // Extremely flexible case-insensitive regex matchers
-            const extractRegex = /function\s*\{\s*millitech:extract-eurodollars\s*--\s*(\d+)\s*\}/i;
-            const executeRegex = /function\s*\{\s*millitech:execute-recent\s*\}/i;
-
-            const extractMatch = code.match(extractRegex);
-            const executeMatch = code.match(executeRegex);
-
-            // Phase 1: Extract command entered
-            if (extractMatch && !executeMatch) {
-                pendingHackAmount = parseInt(extractMatch[1]);
-                document.getElementById('target-modal').style.display = 'flex';
-                document.getElementById('target-input').focus();
-            } 
-            // Phase 2: Target is locked, Execute command entered
-            else if (executeMatch && pendingTarget !== "" && pendingHackAmount > 0) {
-                runHackAnimation();
-            } 
-            else {
-                logToTerminal("> <span style='color: #ff2a2a;'>[ERR] INVALID SYNTAX OR MISSING TARGET.</span>");
-            }
-        }
-
-        function lockTarget() {
-            let target = document.getElementById('target-input').value.trim().toLowerCase();
-            if (target !== '' && !target.includes('@')) {
-                target = target + '@cybernet.com';
-            }
-            
-            if(target !== '') {
-                pendingTarget = target;
-                document.getElementById('target-modal').style.display = 'none';
-                logToTerminal(`> <span style="color: #33ff33;">TARGET LOCKED: ${pendingTarget}.</span> Awaiting Execution Protocol...`);
-                document.getElementById('target-input').value = ''; // clear input for next time
+                setTimeout(() => {
+                    compileCode();
+                }, 10);
             }
         }
 
@@ -258,18 +213,24 @@
                     let senderBalance = senderDoc.exists ? senderDoc.data().balance : 1000;
                     let receiverBalance = receiverDoc.exists ? receiverDoc.data().balance : 1000;
 
-                    // Netrunners steal it even if it puts the target in the negative!
-                    transaction.set(senderRef, { balance: senderBalance - pendingHackAmount }, { merge: true });
-                    transaction.set(receiverRef, { balance: receiverBalance + pendingHackAmount }, { merge: true });
+                    // Netrunners steal it and flag the victim's OS with a hack timestamp!
+                    transaction.set(senderRef, { 
+                        balance: senderBalance - pendingHackAmount,
+                        wasHacked: Date.now() // <--- THIS TRIGGERS THE RED ALARM
+                    }, { merge: true });
+                    
+                    transaction.set(receiverRef, { 
+                        balance: receiverBalance + pendingHackAmount 
+                    }, { merge: true });
                 });
 
                 // Final Yellow Success Text
                 logToTerminal(`<br><span style="color: #ffcc00; font-weight: bold; font-size: 1.2rem;">> extracted ${pendingHackAmount} €$ from ${pendingTarget}</span>`);
                 
-                // Clear pending hack so they have to type it again
+                // Clear pending hack
                 pendingHackAmount = 0;
                 pendingTarget = "";
-                document.getElementById('code-editor').value = ""; // Auto-clear code window after successful hack
+                document.getElementById('code-editor').value = ""; // Auto-clear code window
 
             } catch (error) {
                 console.error(error);
@@ -281,12 +242,18 @@
             document.getElementById('code-editor').focus();
         }
 
-        // Creates a random glitchy window on the screen that auto-deletes
+        // --- RANDOM SIZED GHOST WINDOWS ---
         function spawnGhostWindow() {
             let win = document.createElement('div');
             win.className = 'ghost-window';
-            win.style.top = (10 + Math.random() * 70) + '%';
-            win.style.left = (10 + Math.random() * 70) + '%';
+            win.style.top = (5 + Math.random() * 80) + '%';
+            win.style.left = (5 + Math.random() * 80) + '%';
+            
+            // Randomize Size (between 0.5x and 2.5x scale)
+            const randomScale = (0.5 + Math.random() * 2).toFixed(2);
+            win.style.transform = `scale(${randomScale})`;
+            win.style.zIndex = Math.floor(9000 + Math.random() * 1000);
+
             win.innerHTML = `> DATAMINE ACTIVE<br>> DECRYPTING: ${Math.random().toString(36).substring(2, 10)}<br>> [ACCESS GRANTED]`;
             document.body.appendChild(win);
             setTimeout(() => win.remove(), 800 + Math.random() * 1000);

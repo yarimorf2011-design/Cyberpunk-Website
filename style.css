@@ -1178,3 +1178,28 @@ video.holocall-image {
     box-shadow: 0 0 20px rgba(80, 255, 240, 0.8);;
     border-color: rgba(80, 255, 240, 0.8);;
 }
+
+/* =========================================
+   --- SYSTEM COMPROMISED ALARM STATE ---
+   ========================================= */
+   
+/* Overrides every single cyan element to flashing red */
+body.hacked-theme {
+    --cyan: #ff2a2a !important;
+    --dark-cyan: #8a0000 !important;
+    --glow: 0 0 15px rgba(255, 42, 42, 0.8) !important;
+    animation: screen-shake 0.3s infinite;
+}
+
+body.hacked-theme .scanlines {
+    background: linear-gradient(rgba(255, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.4) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.15), rgba(0, 0, 0, 0.05), rgba(255, 0, 0, 0.15));
+}
+
+@keyframes screen-shake {
+    0% { transform: translate(0) }
+    20% { transform: translate(-1px, 1px) }
+    40% { transform: translate(1px, -1px) }
+    60% { transform: translate(-1px, 2px) }
+    80% { transform: translate(2px, -1px) }
+    100% { transform: translate(0) }
+}
