@@ -453,8 +453,9 @@ function triggerHackAlarm() {
 }
 
 // --- NEW: LOCKDOWN LOGIC ---
+// --- NEW: LOCKDOWN LOGIC ---
 function triggerLockdown(endTime) {
-    document.getElementById('lockdown-overlay').classList.remove('hidden');
+    document.getElementById('lockdown-overlay').style.display = 'flex'; // Forces it to show
     if (lockdownTimerInterval) clearInterval(lockdownTimerInterval);
 
     lockdownTimerInterval = setInterval(() => {
@@ -473,7 +474,7 @@ function triggerLockdown(endTime) {
 }
 
 function clearLockdown() {
-    document.getElementById('lockdown-overlay').classList.add('hidden');
+    document.getElementById('lockdown-overlay').style.display = 'none'; // Forces it to hide
     if (lockdownTimerInterval) clearInterval(lockdownTimerInterval);
 }
 

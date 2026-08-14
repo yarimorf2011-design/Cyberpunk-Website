@@ -219,20 +219,20 @@ body {
 
 /* --- NETWATCH REPORT APP --- */
 #icon-Report {
-    background-color: rgba(255, 42, 42, 0.1); 
+    background-color: rgba(80, 255, 240, 0.8); 
     background-image: url('assets/ReportIcon.png'); 
     background-size: cover;
     background-position: center;
-    border-color: #ff2a2a;
+    border-color: rgba(80, 255, 240, 0.8);
 }
 
 #icon-Report:hover {
-    box-shadow: 0 0 20px rgba(255, 42, 42, 0.8);
-    border-color: #ff2a2a;
+    box-shadow: 0 0 20px rgba(80, 255, 240, 0.8);
+    border-color: rgba(80, 255, 240, 0.8);
 }
 .app-item:hover #icon-Report + .app-label {
-    color: #ff2a2a;
-    text-shadow: 0 0 5px #ff2a2a;
+    color: rgba(80, 255, 240, 0.8);
+    text-shadow: 0 0 5px rgba(80, 255, 240, 0.8);
 }
 
 /* --- RADIOPORT MODAL --- */
