@@ -68,10 +68,16 @@
                     <span class="app-label">BANK</span>
                 </div>
 
-                <!-- NEW: Netrunner Terminal App -->
+                <!-- Netrunner Terminal App -->
                 <div class="app-item" onclick="window.location.href='terminal.html'">
                     <div class="app-icon" id="icon-Terminal"></div>
                     <span class="app-label">TERMINAL</span>
+                </div>
+
+                <!-- NEW: Netwatch Report App -->
+                <div class="app-item" onclick="openReportModal()">
+                    <div class="app-icon" id="icon-Report"></div>
+                    <span class="app-label">REPORT</span>
                 </div>
             </div>
 
@@ -114,7 +120,7 @@
                 </div>
             </div>
 
-            <!-- DEV OVERRIDE PANEL (Safely inside main-window now) -->
+            <!-- DEV OVERRIDE PANEL -->
             <div id="admin-view" class="messages-container" style="display: none !important; padding: 20px; flex-direction: column; gap: 20px; overflow-y: auto;">
                 <h2 style="color: #ff2a2a; border-bottom: 1px solid #ff2a2a; padding-bottom: 10px; margin-bottom: 10px;">
                     ⬢ MAINFRAME DEVELOPER OVERRIDE
@@ -137,10 +143,20 @@
                         <button class="send-btn" style="color: #ffcc00; border-color: #ffcc00; align-self: flex-start;" onclick="devModifyFunds()">MODIFY BALANCE</button>
                     </div>
                 </div>
+
+                <!-- NEW: Admin Tribunal -->
+                <div style="border: 1px solid var(--cyan); padding: 15px; background: rgba(0, 240, 255, 0.05);">
+                    <h3 style="color: var(--cyan); margin-bottom: 5px;">NETWATCH TRIBUNAL</h3>
+                    <p style="color: #fff; margin-bottom: 15px; font-size: 0.9rem;">Review and adjudicate active user reports.</p>
+                    <div id="admin-reports-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- JS WILL INJECT PENDING REPORTS HERE -->
+                        <div style="color: #fff; opacity: 0.6; font-size: 0.9rem;">NO ACTIVE CASES.</div>
+                    </div>
+                </div>
             </div>
 
-        </main> <!-- /main-window closing tag restored -->
-    </div> <!-- /os-container closing tag restored -->
+        </main> 
+    </div> 
 
     <!-- EXISTING MODALS (Radio, Chat, Weather) -->
     <div id="radio-modal" class="radio-modal hidden">
@@ -257,7 +273,7 @@
         </div>
     </div>
     
-    <!-- VOICELINK AND SETUP MODALS -->
+    <!-- VOICELINK MODALS -->
     <audio id="remote-audio" autoplay></audio>
     <audio id="local-audio" autoplay muted></audio>
 
@@ -276,8 +292,23 @@
         </div>
     </div>
 
+    <!-- NEW: REPORT SUBMISSION MODAL -->
+    <div id="report-modal" class="setup-modal hidden" style="z-index: 10000;">
+        <div class="setup-window" style="border-color: #ff2a2a; box-shadow: 0 0 20px rgba(255, 42, 42, 0.2);">
+            <div class="setup-header" style="background: #ff2a2a; color: #000;">FILE NETWATCH REPORT</div>
+            <div class="setup-content">
+                <p style="margin-bottom: 15px; color: #ff2a2a; line-height: 1.4;">ALERT TRIBUNAL TO ILLICIT NETRUNNING. FALSE REPORTS WILL BE PUNISHED.</p>
+                <div class="chat-input-area" style="border-color: #ff2a2a;">
+                    <span class="prompt-arrow" style="color: #ff2a2a;">></span>
+                    <input type="text" id="report-target-input" placeholder="Enter target alias..." style="color: #ff2a2a; outline: none; background: transparent; border: none; flex-grow: 1; font-family: inherit;" autocomplete="off">
+                    <button onclick="submitReport()" class="send-btn" style="color: #ff2a2a; border-color: #ff2a2a;">REPORT</button>
+                    <button onclick="closeReportModal()" class="send-btn" style="margin-left: 5px;">CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="holocall-ui" class="holocall-container hidden">
-        
         <div class="holocall-frame">
             <img src="assets/CallingImage.jpg" alt="Caller ID" id="holocall-placeholder-img" class="holocall-image">
             <video id="remote-video" autoplay playsinline class="holocall-image hidden"></video>
@@ -294,12 +325,20 @@
             <button onclick="declineCall()" class="holo-btn reject-btn">DECLINE</button>
         </div>
         
-        <!-- ACTIVE CONTROLS WITH CAMERA TOGGLE BELOW DISCONNECT -->
         <div id="holocall-active-controls" class="holocall-controls hidden">
             <button onclick="hangUp()" class="holo-btn reject-btn">DISCONNECT</button>
             <button id="cam-toggle-btn" onclick="toggleCamera()" class="holo-btn cam-btn">CAM: OFF</button>
         </div>
+    </div>
 
+    <!-- NEW: FULL SCREEN LOCKDOWN OVERLAY -->
+    <div id="lockdown-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 0, 0, 0.95); z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 5px solid #ff2a2a; backdrop-filter: blur(10px);">
+        <h1 class="blink-text" style="color: #ff2a2a; font-size: 5rem; letter-spacing: 5px; margin-bottom: 10px; text-shadow: 0 0 30px #ff2a2a;">NETWATCH LOCKDOWN</h1>
+        <h2 style="color: #fff; margin-bottom: 30px; letter-spacing: 2px;">YOUR SYSTEM HAS BEEN SUSPENDED FOR CYBERCRIMES.</h2>
+        <div style="font-size: 2.5rem; color: #ffcc00; margin-bottom: 40px; font-family: monospace; text-shadow: 0 0 15px rgba(255, 204, 0, 0.5);">
+            TIME REMAINING: <span id="lockdown-timer">20:00</span>
+        </div>
+        <button onclick="payBailout()" class="send-btn" style="background: rgba(255, 204, 0, 0.1); border: 2px solid #ffcc00; color: #ffcc00; padding: 20px 40px; font-size: 1.5rem; cursor: pointer; transition: 0.2s;">PAY 1,000 €$ FINE TO UNLOCK</button>
     </div>
     
     <!-- SCRIPTS -->

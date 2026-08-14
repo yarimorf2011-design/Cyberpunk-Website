@@ -57,6 +57,7 @@ function checkDevStatus() {
 
     if (myEmail === 'yari@cybernet.com') {
         adminTab.style.display = 'block';
+        initTribunalWiretap(); // Start listening for Netwatch reports
     } else {
         adminTab.style.display = 'none';
     }
@@ -398,10 +399,9 @@ function closeBank() {
     document.getElementById('bank-modal').classList.add('hidden');
 }
 
-// --- BANKING & EDDIES SYSTEM ---
-// --- BANKING & EDDIES SYSTEM ---
 let isFirstLoad = true;
-let lastHackedTimestamp = null; // Tracks recent attacks
+let lastHackedTimestamp = null; 
+let lockdownTimerInterval = null; // NEW: Timer for Netwatch lockdown
 
 function initBankWiretap() {
     const userDocRef = db.collection('users').doc(myEmail);
@@ -411,14 +411,18 @@ function initBankWiretap() {
             const data = doc.data();
             const newBalance = data.balance;
             
-            // --- BULLETPROOF HACK DETECTION ---
-            // If the OS is already booted (!isFirstLoad) and a new hack comes in, trigger alarm!
+            // --- HACK DETECTION ---
             if (!isFirstLoad && data.wasHacked && data.wasHacked !== lastHackedTimestamp) {
                 triggerHackAlarm();
             }
-            
-            // Always update the tracker so we don't trigger it twice
             lastHackedTimestamp = data.wasHacked || null;
+
+            // --- NEW: NETWATCH LOCKDOWN WATCHER ---
+            if (data.lockdownUntil && data.lockdownUntil > Date.now()) {
+                triggerLockdown(data.lockdownUntil);
+            } else {
+                clearLockdown();
+            }
 
             if (isFirstLoad) {
                 isFirstLoad = false;
@@ -431,33 +435,81 @@ function initBankWiretap() {
                 currentFunds = newBalance;
             }
         } else {
-            // New account creation fallback
             userDocRef.set({ balance: 1000 }).catch(e => console.error(e));
         }
     });
 }
 
 function triggerHackAlarm() {
-    // Force the whole OS into RED mode
     document.body.classList.add('hacked-theme');
     
-    // Add flashing text to the top headers
     const headers = document.querySelectorAll('.brand, .url');
     headers.forEach(el => el.classList.add('blink-text'));
 
-    // Automatically recover after 10 seconds
     setTimeout(() => {
         document.body.classList.remove('hacked-theme');
         headers.forEach(el => el.classList.remove('blink-text'));
     }, 10000);
 }
 
+// --- NEW: LOCKDOWN LOGIC ---
+function triggerLockdown(endTime) {
+    document.getElementById('lockdown-overlay').classList.remove('hidden');
+    if (lockdownTimerInterval) clearInterval(lockdownTimerInterval);
+
+    lockdownTimerInterval = setInterval(() => {
+        const now = Date.now();
+        const diff = endTime - now;
+        
+        if (diff <= 0) {
+            clearLockdown();
+            db.collection('users').doc(myEmail).set({ lockdownUntil: 0 }, { merge: true });
+        } else {
+            const minutes = Math.floor(diff / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            document.getElementById('lockdown-timer').innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+    }, 1000);
+}
+
+function clearLockdown() {
+    document.getElementById('lockdown-overlay').classList.add('hidden');
+    if (lockdownTimerInterval) clearInterval(lockdownTimerInterval);
+}
+
+async function payBailout() {
+    if (currentFunds < 1000) {
+        alert("[NETWATCH ALERT] INSUFFICIENT FUNDS. YOU REMAIN IN LOCKDOWN.");
+        return;
+    }
+    
+    try {
+        const userRef = db.collection('users').doc(myEmail);
+        
+        await db.runTransaction(async (transaction) => {
+            const doc = await transaction.get(userRef);
+            const bal = doc.data().balance;
+            
+            if (bal < 1000) throw "Insufficient funds";
+            
+            // Deduct funds and remove the lockdown timestamp
+            transaction.set(userRef, { balance: bal - 1000, lockdownUntil: 0 }, { merge: true });
+        });
+        
+        alert("[NETWATCH ALERT] BAILOUT PAYMENT ACCEPTED. SYSTEM RESTORED.");
+        clearLockdown();
+    } catch (error) {
+        console.error(error);
+        alert("[SYSTEM ERROR] Transaction failed. Lockdown remains active.");
+    }
+}
+
+
 function updateDisplays(val) {
     const displayString = `${val.toLocaleString()} €$`;
     const topDisplay = document.getElementById('user-funds-display');
     const bankDisplay = document.getElementById('bank-main-balance');
     
-    // Update Top Header Display
     if (topDisplay) {
         topDisplay.innerText = displayString;
         if (val < 0) {
@@ -467,7 +519,6 @@ function updateDisplays(val) {
         }
     }
     
-    // Update Bank App Display
     if (bankDisplay) {
         bankDisplay.innerText = displayString;
         if (val < 0) {
@@ -505,13 +556,9 @@ function animateTransactionOverlay(difference) {
     
     if (!overlay || !textElement) return;
 
-    // 1. Clear previous animation classes
     textElement.className = '';
-    
-    // 2. FORCE BROWSER REFLOW
     void textElement.offsetWidth;
 
-    // 3. Apply text and re-trigger animation
     if (difference > 0) {
         textElement.innerText = `+${difference.toLocaleString()} €$`;
         textElement.classList.add('transact-up');
@@ -520,10 +567,8 @@ function animateTransactionOverlay(difference) {
         textElement.classList.add('transact-down');
     }
     
-    // 4. Reveal the overlay
     overlay.classList.remove('hidden');
     
-    // 5. Hide the overlay container when the 2-second animation ends
     setTimeout(() => {
         overlay.classList.add('hidden');
     }, 2000);
@@ -619,7 +664,6 @@ function openSpecificEmail(emailId) {
     document.getElementById('read-from').innerText = `FROM: ${email.from}`;
     document.getElementById('read-to').innerText = `TO: ${email.to}`;
     
-    // Display if funds were attached to this message
     let finalBodyHTML = email.body.replace(/\n/g, '<br>');
     if (email.attachedFunds > 0) {
         finalBodyHTML = `<div style="color: #ffcc00; border: 1px dashed #ffcc00; padding: 10px; margin-bottom: 15px;">
@@ -646,7 +690,6 @@ function openCompose() {
 async function sendOutboundEmail() {
     let toField = document.getElementById('compose-to').value.trim().toLowerCase();
     
-    // Auto-complete the domain if it's missing
     if (toField !== '' && !toField.includes('@')) {
         toField = toField + '@cybernet.com';
     }
@@ -790,7 +833,6 @@ async function toggleCamera() {
     const videoTransceiver = peerConnection.getTransceivers().find(t => t.receiver.track.kind === 'video');
     const videoSender = videoTransceiver ? videoTransceiver.sender : null;
 
-    // Connect to database to sync state
     const callDocRef = db.collection('calls').doc(currentCallId);
     const callData = (await callDocRef.get()).data();
     const amICaller = (callData.callerEmail === myEmail);
@@ -808,7 +850,6 @@ async function toggleCamera() {
             camBtn.innerText = "CAM: ON";
             camBtn.classList.add('active');
 
-            // Tell Firebase your camera is ON
             await callDocRef.update({ [amICaller ? 'callerCam' : 'targetCam']: true });
         } catch (err) {
             console.error("Camera access error:", err);
@@ -828,7 +869,6 @@ async function toggleCamera() {
         camBtn.innerText = "CAM: OFF";
         camBtn.classList.remove('active');
 
-        // Tell Firebase your camera is OFF
         await callDocRef.update({ [amICaller ? 'callerCam' : 'targetCam']: false });
     }
 }
@@ -878,24 +918,20 @@ async function answerCall() {
     const callDoc = db.collection('calls').doc(currentCallId);
     const callData = (await callDoc.get()).data();
 
-    // Grab audio immediately
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     document.getElementById('local-audio').srcObject = localStream;
 
     peerConnection = new RTCPeerConnection(rtcConfig);
     setupPeerConnection(callDoc, false);
 
-    // 1. Process the caller's offer
     const offerDescription = callData.offer;
     await peerConnection.setRemoteDescription(new RTCSessionDescription(offerDescription));
 
-    // 2. NETWORK OVERRIDE: Force the video channel to remain open for future uploads
     const videoTransceiver = peerConnection.getTransceivers().find(t => t.receiver.track.kind === 'video');
     if (videoTransceiver) {
         videoTransceiver.direction = 'sendrecv';
     }
 
-    // 3. Create and send the answer
     const answerDescription = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answerDescription);
 
@@ -923,12 +959,10 @@ function listenForCallEnd(callId) {
         if (!doc.exists) {
             stopCallCleanup();
         } else {
-            // NEW: Real-time UI Sync via Firebase
             const data = doc.data();
             const remoteVid = document.getElementById('remote-video');
             const placeholderImg = document.getElementById('holocall-placeholder-img');
             
-            // Check if the OTHER person's camera is on
             const amICaller = (data.callerEmail === myEmail);
             const isRemoteCamOn = amICaller ? data.targetCam : data.callerCam;
 
@@ -991,7 +1025,6 @@ function setupPeerConnection(callDoc, isCaller) {
             const remoteVid = document.getElementById('remote-video');
             remoteStream.addTrack(event.track);
             remoteVid.srcObject = remoteStream;
-            // The broken mute/unmute listeners have been removed from here!
         }
     };
 
@@ -1075,5 +1108,112 @@ async function devModifyFunds() {
     } catch (error) {
         console.error("Fund modification error:", error);
         alert("[DEV ERROR] Could not override target account balance.");
+    }
+} 
+
+// ==========================================
+// --- NEW: NETWATCH REPORTING SYSTEM ---
+// ==========================================
+
+function openReportModal() {
+    document.getElementById('report-modal').classList.remove('hidden');
+    document.getElementById('report-target-input').value = '';
+    document.getElementById('report-target-input').focus();
+}
+
+function closeReportModal() {
+    document.getElementById('report-modal').classList.add('hidden');
+}
+
+async function submitReport() {
+    let target = document.getElementById('report-target-input').value.trim().toLowerCase();
+    
+    if (target !== '' && !target.includes('@')) {
+        target = target + '@cybernet.com';
+    }
+
+    if (!target) {
+        alert("Please enter a valid target alias.");
+        return;
+    }
+
+    try {
+        await db.collection('reports').add({
+            reporter: myEmail,
+            suspect: target,
+            timestamp: Date.now()
+        });
+        
+        alert("[NETWATCH UPLINK] Report successfully submitted to Tribunal for review.");
+        closeReportModal();
+    } catch (error) {
+        console.error("Error submitting report:", error);
+        alert("[SYSTEM ERROR] Could not connect to Netwatch servers.");
+    }
+}
+
+// --- ADMIN TRIBUNAL LOGIC ---
+
+function initTribunalWiretap() {
+    if (myEmail !== 'yari@cybernet.com') return;
+
+    db.collection('reports').onSnapshot(snapshot => {
+        const listContainer = document.getElementById('admin-reports-list');
+        if (!listContainer) return;
+
+        listContainer.innerHTML = '';
+        
+        if (snapshot.empty) {
+            listContainer.innerHTML = '<div style="color: #fff; opacity: 0.6; font-size: 0.9rem;">NO ACTIVE CASES.</div>';
+            return;
+        }
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const caseId = doc.id.substring(0, 6).toUpperCase();
+            
+            listContainer.innerHTML += `
+                <div class="admin-report-card">
+                    <div class="admin-report-header">CASE ID: #${caseId}</div>
+                    <div class="admin-report-body">
+                        <strong>SUSPECT:</strong> ${data.suspect}<br>
+                        <strong style="color: rgba(255,255,255,0.5);">REPORTER:</strong> <span style="color: rgba(255,255,255,0.5);">${data.reporter}</span>
+                    </div>
+                    <div class="admin-report-actions">
+                        <button class="btn-punish" onclick="punishUser('${doc.id}', '${data.suspect}')">LOCKDOWN (20m)</button>
+                        <button class="btn-dismiss" onclick="dismissReport('${doc.id}')">DISMISS</button>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
+
+async function dismissReport(reportId) {
+    try {
+        await db.collection('reports').doc(reportId).delete();
+    } catch (e) {
+        console.error("Failed to dismiss case:", e);
+    }
+}
+
+async function punishUser(reportId, suspectEmail) {
+    if (!confirm(`Are you sure you want to enforce a 20-minute lockdown on ${suspectEmail}?`)) return;
+
+    // Calculate lockdown time (20 minutes from now)
+    // 20 minutes * 60 seconds * 1000 milliseconds = 1200000 ms
+    const lockdownTime = Date.now() + 1200000;
+
+    try {
+        // Inject the lockdown timestamp into the user's document
+        await db.collection('users').doc(suspectEmail).set({ lockdownUntil: lockdownTime }, { merge: true });
+        
+        // Delete the report so it clears from the tribunal
+        await db.collection('reports').doc(reportId).delete();
+        
+        alert(`[TRIBUNAL ENFORCED] ${suspectEmail} is now locked down.`);
+    } catch (e) {
+        console.error("Failed to enforce punishment:", e);
+        alert("[DEV ERROR] Could not execute lockdown protocol.");
     }
 }
