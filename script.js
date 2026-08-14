@@ -411,6 +411,7 @@ function initBankWiretap() {
             const data = doc.data();
             const newBalance = data.balance;
             
+            // --- HACK DETECTION ---
             if (!isFirstLoad && data.wasHacked && data.wasHacked !== lastHackedTimestamp) {
                 triggerHackAlarm();
             }
@@ -493,8 +494,8 @@ function clearLockdown() {
 }
 
 async function payBailout() {
-// Deduct funds and remove the lockdown timestamp + reset burned ports
-    transaction.set(userRef, { balance: bal - 1000, lockdownUntil: 0, jailbreakBurned: false }, { merge: true });
+    if (currentFunds < 1000) {
+        // alert("[NETWATCH ALERT] INSUFFICIENT FUNDS. YOU REMAIN IN LOCKDOWN.");
         return;
     }
     
@@ -507,8 +508,8 @@ async function payBailout() {
             
             if (bal < 1000) throw "Insufficient funds";
             
-            // Deduct funds and remove the lockdown timestamp
-            transaction.set(userRef, { balance: bal - 1000, lockdownUntil: 0 }, { merge: true });
+            // Deduct funds and remove the lockdown timestamp + reset burned ports
+            transaction.set(userRef, { balance: bal - 1000, lockdownUntil: 0, jailbreakBurned: false }, { merge: true });
         });
         
         // alert("[NETWATCH ALERT] BAILOUT PAYMENT ACCEPTED. SYSTEM RESTORED.");
@@ -517,7 +518,7 @@ async function payBailout() {
         console.error(error);
         // alert("[SYSTEM ERROR] Transaction failed. Lockdown remains active.");
     }
-
+}
 
 
 function updateDisplays(val) {
@@ -1220,7 +1221,6 @@ async function punishUser(reportId, suspectEmail) {
     const lockdownTime = Date.now() + 1200000;
 
     try {
-
         // Inject the lockdown timestamp into the user's document AND reset the jailbreak state
         await db.collection('users').doc(suspectEmail).set({ lockdownUntil: lockdownTime, jailbreakBurned: false }, { merge: true });
         
@@ -1233,6 +1233,45 @@ async function punishUser(reportId, suspectEmail) {
         // alert("[DEV ERROR] Could not execute lockdown protocol.");
     }
 }
+
+// ==========================================
+// --- DATASHARD JAILBREAK SYSTEM ---
+// ==========================================
+
+function initiateJailbreak(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Bring up the green hacking interface over the red lockdown screen
+    document.getElementById('jailbreak-modal').style.display = 'flex';
+    const log = document.getElementById('jailbreak-log');
+    
+    log.innerHTML = `> <span style="color: #ffcc00;">[SYSTEM] DETECTING EXTERNAL HARDWARE...</span>`;
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        setTimeout(() => {
+            log.innerHTML += `<br>> <span style="color: #33ff33;">[DATASHARD MOUNTED: ${file.name.toUpperCase()}]</span><br>> UPLOADING PAYLOAD...<br>> AWAITING BYPASS COMMAND...`;
+            document.getElementById('jailbreak-input').focus();
+        }, 800);
+        
+        // Reset the input so you can plug it in again later if needed
+        document.getElementById('jailbreak-port').value = '';
+    };
+    
+    reader.onerror = function() {
+        log.innerHTML += `<br>> <span style="color: #ff2a2a;">[ERR] DATASHARD CORRUPTED. UNABLE TO MOUNT.</span>`;
+    };
+
+    reader.readAsText(file);
+}
+
+function abortJailbreak() {
+    document.getElementById('jailbreak-modal').style.display = 'none';
+    document.getElementById('jailbreak-input').value = '';
+}
+
 async function executeJailbreak() {
     const input = document.getElementById('jailbreak-input');
     const log = document.getElementById('jailbreak-log');
