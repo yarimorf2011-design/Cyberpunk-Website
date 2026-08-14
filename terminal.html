@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICE BREAKER - Terminal</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* Custom Terminal Overrides */
+        .terminal-container {
+            width: 90%;
+            max-width: 1200px;
+            height: 85vh;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid #ff2a2a;
+            background: rgba(10, 0, 0, 0.85);
+            box-shadow: 0 0 30px rgba(255, 42, 42, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+
+        .terminal-header {
+            background: rgba(255, 42, 42, 0.15);
+            color: #ff2a2a;
+            padding: 15px 20px;
+            border-bottom: 2px solid #ff2a2a;
+            font-weight: bold;
+            letter-spacing: 2px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .editor-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        #code-editor {
+            flex-grow: 1;
+            background: #050101;
+            border: 1px solid rgba(255, 42, 42, 0.3);
+            color: #33ff33; /* Classic Hacker Green */
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1rem;
+            padding: 20px;
+            outline: none;
+            resize: none;
+            line-height: 1.5;
+        }
+
+        #code-editor:focus {
+            border-color: #ff2a2a;
+            box-shadow: inset 0 0 20px rgba(255, 42, 42, 0.1);
+        }
+
+        /* Custom green scrollbar for the terminal */
+        #code-editor::-webkit-scrollbar { width: 8px; }
+        #code-editor::-webkit-scrollbar-track { background: transparent; }
+        #code-editor::-webkit-scrollbar-thumb { background: #33ff33; }
+
+        .terminal-controls {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: 0.2s;
+        }
+
+        .return-btn {
+            background: transparent;
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+        }
+        .return-btn:hover {
+            background: var(--cyan);
+            color: #000;
+            box-shadow: 0 0 15px var(--cyan);
+        }
+
+        .exec-btn {
+            background: rgba(255, 42, 42, 0.1);
+            border: 1px solid #ff2a2a;
+            color: #ff2a2a;
+        }
+        .exec-btn:hover {
+            background: #ff2a2a;
+            color: #000;
+            box-shadow: 0 0 15px #ff2a2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <span>⬢ ICE_BREAKER_COMPILER_V1.0</span>
+            <span>NODE: LOCALHOST</span>
+        </div>
+        
+        <div class="editor-area">
+            <textarea id="code-editor" spellcheck="false" placeholder="// INIT NETRUNNER PROTOCOL&#10;// INPUT CUSTOM SYNTAX..."></textarea>
+            
+            <div class="terminal-controls">
+                <button class="action-btn return-btn" onclick="window.location.href='index.html'">[ ABORT / RETURN TO OS ]</button>
+                <button class="action-btn exec-btn" onclick="compileCode()">[ EXECUTE PROTOCOL ]</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Placeholder function for your future custom coding language!
+        function compileCode() {
+            const code = document.getElementById('code-editor').value;
+            
+            if (code.trim() === '') {
+                alert("[COMPILER ERROR] No syntax detected.");
+                return;
+            }
+            
+            // For now, it just shows a success popup
+            alert("[ICE BREAKER INITIATED]\nCompiling custom syntax...\n\nResult: BYPASS SUCCESSFUL.");
+        }
+    </script>
+</body>
+</html>

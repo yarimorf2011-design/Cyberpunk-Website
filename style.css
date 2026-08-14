@@ -1164,3 +1164,17 @@ video.holocall-image {
     z-index: 10;
     pointer-events: none;
 }
+
+/* --- NETRUNNER TERMINAL APP --- */
+#icon-Terminal {
+    background-color: #ff2a2a; 
+    /* Add a custom icon to your assets folder if you want! */
+    background-image: url('assets/TerminalIcon.png'); 
+    background-size: cover;
+    background-position: center;
+}
+
+#icon-Terminal:hover {
+    box-shadow: 0 0 20px rgba(255, 42, 42, 0.8);
+    border-color: #ff2a2a;
+}
