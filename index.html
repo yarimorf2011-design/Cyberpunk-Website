@@ -369,6 +369,23 @@
     </div>
 </div>
     
+
+<!-- =========================================
+         INITIAL BOOT / LOGIN MODAL 
+         ========================================= -->
+         <div id="setup-modal" class="setup-modal hidden" style="z-index: 9999999;">
+            <div class="setup-window">
+                <div class="setup-header">⬢ SYSTEM BOOT SEQUENCE</div>
+                <div class="setup-content">
+                    <p style="margin-bottom: 15px; color: var(--cyan); letter-spacing: 1px;">ENTER NEW USER ALIAS TO INITIALIZE CYBERDECK:</p>
+                    <div class="chat-input-area" style="border-top: none; padding: 0; background: transparent;">
+                        <span class="prompt-arrow">></span>
+                        <input type="text" id="username-input" placeholder="e.g. netrunner99" onkeydown="handleSetupEnter(event)" style="background: transparent; border: 1px solid var(--cyan); padding: 10px; color: #fff; flex-grow: 1; outline: none; font-family: inherit; font-size: 1rem;" autocomplete="off">
+                        <button onclick="registerUser()" class="send-btn" style="padding: 10px 20px;">REGISTER</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     <!-- SCRIPTS -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
