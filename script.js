@@ -517,7 +517,7 @@ async function payBailout() {
         console.error(error);
         // alert("[SYSTEM ERROR] Transaction failed. Lockdown remains active.");
     }
-}
+
 
 
 function updateDisplays(val) {
