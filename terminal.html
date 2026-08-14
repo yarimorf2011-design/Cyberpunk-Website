@@ -20,6 +20,7 @@
             box-shadow: 0 0 30px rgba(51, 255, 51, 0.2);
             position: relative;
             z-index: 10;
+            transition: all 0.3s;
         }
 
         .terminal-header {
@@ -31,6 +32,7 @@
             letter-spacing: 2px;
             display: flex;
             justify-content: space-between;
+            transition: all 0.3s;
         }
 
         .editor-area {
@@ -54,6 +56,7 @@
             outline: none;
             resize: none;
             line-height: 1.5;
+            transition: all 0.3s;
         }
 
         #code-editor:focus {
@@ -72,6 +75,7 @@
             padding: 15px;
             overflow-y: auto;
             line-height: 1.4;
+            transition: all 0.3s;
         }
 
         #code-editor::-webkit-scrollbar, #terminal-output::-webkit-scrollbar { width: 8px; }
@@ -105,6 +109,7 @@
             background: #050a05; border: 2px solid #33ff33; padding: 20px;
             box-shadow: 0 0 30px rgba(51, 255, 51, 0.5); z-index: 100;
             display: flex; flex-direction: column; gap: 15px; text-align: center;
+            transition: all 0.3s;
         }
         
         .spoof-theme {
@@ -127,24 +132,77 @@
         .spoof-input::placeholder { color: rgba(255, 42, 42, 0.5); }
         .spoof-textarea { resize: none; height: 100px; }
         
-        .spoof-btn {
-            background: rgba(255, 42, 42, 0.1); border: 1px solid #ff2a2a; color: #ff2a2a; margin-top: 5px;
-        }
-        .spoof-btn:hover { background: #ff2a2a; color: #000; box-shadow: 0 0 15px #ff2a2a; }
-
         .ghost-window {
             position: fixed; border: 1px solid #33ff33; background: rgba(0,20,0,0.9);
             color: #33ff33; font-family: monospace; padding: 10px; z-index: 9999;
             box-shadow: 0 0 15px #33ff33; pointer-events: none;
         }
+
+        /* =========================================
+           --- INTENSE BLACKWALL VISUALS ---
+           ========================================= */
+        .blackwall-overlay {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 0;
+            width: 100vw;
+            height: 4px;
+            background: #ff0000;
+            box-shadow: 0 0 80px 40px rgba(255, 0, 0, 0.8), 0 0 150px 80px rgba(255, 0, 0, 0.4);
+            z-index: 9998;
+            pointer-events: none;
+            animation: blackwall-pulse 0.05s infinite alternate;
+        }
+
+        body.blackwall-active {
+            animation: blackwall-shake 0.1s infinite;
+            background-color: #0a0000 !important;
+        }
+        body.blackwall-active .scanlines {
+            background: linear-gradient(rgba(255, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.4) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.2), rgba(0, 0, 0, 0.05), rgba(255, 0, 0, 0.2));
+        }
+        body.blackwall-active .terminal-container {
+            border-color: #ff0000;
+            box-shadow: 0 0 60px rgba(255, 0, 0, 0.6);
+        }
+        body.blackwall-active .terminal-header {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff0000;
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+        }
+        body.blackwall-active #code-editor, body.blackwall-active #terminal-output {
+            color: #ff2a2a;
+            border-color: #ff0000;
+            text-shadow: 0 0 5px rgba(255,0,0,0.5);
+            box-shadow: inset 0 0 30px rgba(255,0,0,0.1);
+        }
+        body.blackwall-active #code-editor::-webkit-scrollbar-thumb, body.blackwall-active #terminal-output::-webkit-scrollbar-thumb {
+            background: #ff0000;
+        }
+
+        @keyframes blackwall-pulse {
+            0% { opacity: 0.7; transform: scaleY(1); }
+            100% { opacity: 1; transform: scaleY(3.5); }
+        }
+        @keyframes blackwall-shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-2px, -1px) rotate(-1deg); }
+            40% { transform: translate(-1px, 2px) rotate(1deg); }
+            60% { transform: translate(2px, -2px) rotate(0deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            100% { transform: translate(1px, 2px) rotate(-1deg); }
+        }
     </style>
 </head>
 <body>
     <div class="scanlines"></div>
+    <div id="blackwall-overlay" class="blackwall-overlay"></div>
     
     <div class="terminal-container">
         <div class="terminal-header">
-            <span>⬢ ICE_BREAKER_COMPILER_V1.5</span>
+            <span>⬢ ICE_BREAKER_COMPILER_V1.6</span>
             <span>NODE: LOCALHOST</span>
         </div>
         
@@ -157,16 +215,23 @@
 
             <div class="terminal-controls">
                 <button class="action-btn return-btn" onclick="window.location.href='index.html'">[ ABORT / RETURN TO OS ]</button>
+                
+                <!-- DATASHARD MOUNT PORT -->
+                <button class="action-btn return-btn" style="border-color: #ffcc00; color: #ffcc00;" onclick="document.getElementById('shard-port').click()">[ MOUNT DATASHARD ]</button>
+                <input type="file" id="shard-port" style="display: none;" accept=".txt" onchange="readDatashard(event)">
+
                 <button class="action-btn exec-btn" onclick="compileCode()">[ EXECUTE PROTOCOL ]</button>
             </div>
         </div>
 
+        <!-- Target Modal (Multi-use for Money & Blackwall) -->
         <div id="target-modal" class="target-modal" style="display: none;">
-            <span style="color: #33ff33; font-weight: bold; font-family: monospace;">[ ENTER TARGET ALIAS TO EXTRACT FROM ]</span>
+            <span id="target-modal-title" style="color: #33ff33; font-weight: bold; font-family: monospace;">[ ENTER TARGET ALIAS ]</span>
             <input type="text" id="target-input" onkeydown="handleTargetEnter(event)" style="background: transparent; border: 1px solid #33ff33; color: #33ff33; padding: 10px; font-family: monospace; outline: none;" autocomplete="off">
-            <button class="action-btn exec-btn" onclick="lockTarget()">LOCK TARGET</button>
+            <button class="action-btn exec-btn" id="target-lock-btn" onclick="lockTarget()">LOCK TARGET</button>
         </div>
 
+        <!-- Spoof Modal (Message Injection) -->
         <div id="spoof-modal" class="target-modal spoof-theme" style="display: none;">
             <span style="color: #ff2a2a; font-weight: bold; font-family: monospace; margin-bottom: 5px;">[ OVERRIDE COMMS NETWORK ]</span>
             <input type="text" id="spoof-sender" placeholder="SPOOF SENDER (e.g., boss@cybernet.com)" class="spoof-input" autocomplete="off">
@@ -201,18 +266,16 @@
         
         const myEmail = localStorage.getItem('cybernetEmail') || "unknown@cybernet.com";
 
-        // --- NEW: COOLDOWN TRACKER ---
+        // Cooldown Tracker
         let lastHackTime = 0;
-        const HACK_COOLDOWN_MS = 60000; // 60 seconds
+        const HACK_COOLDOWN_MS = 60000; 
 
         // Global Trackers
         let activeHackMode = null; 
         
-        // Money Trackers
         let pendingHackAmount = 0;
         let pendingTarget = "";
 
-        // Message Trackers
         let pendingSpoofSender = "";
         let pendingSpoofReceiver = "";
         let pendingSpoofMessage = "";
@@ -221,6 +284,28 @@
             const out = document.getElementById('terminal-output');
             out.innerHTML += `<br>${text}`;
             out.scrollTop = out.scrollHeight;
+        }
+
+        // --- DATASHARD READER ---
+        function readDatashard(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            logToTerminal(`> <span style="color: #ffcc00;">[SYSTEM] DETECTING EXTERNAL HARDWARE...</span>`);
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                document.getElementById('code-editor').value = e.target.result;
+                setTimeout(() => {
+                    logToTerminal(`> <span style="color: #33ff33;">[DATASHARD MOUNTED: ${file.name.toUpperCase()}]</span> Ready for execution.`);
+                }, 500);
+                document.getElementById('shard-port').value = '';
+            };
+            
+            reader.onerror = function() {
+                logToTerminal(`> <span style="color: #ff2a2a;">[ERR] DATASHARD CORRUPTED OR UNREADABLE.</span>`);
+            };
+            reader.readAsText(file);
         }
 
         function handleEditorEnter(event) {
@@ -246,36 +331,47 @@
             // Syntax Matchers
             const extractRegex = /milli?tech:extract-eurodollars\s*[-]*\s*\(?(\d+)\)?/i;
             const spoofRegex = /milli?tech:send-usermessage/i;
-            const executeRegex = /milli?tech:execute-recent/i;
+            const blackwallRegex = /blackwall:\s*drain-ed/i; // NEW: Blackwall Syntax
+            const executeRegex = /(milli?tech|blackwall):execute-recent/i;
 
             const extractMatch = code.match(extractRegex);
             const spoofMatch = code.match(spoofRegex);
+            const blackwallMatch = code.match(blackwallRegex);
             const executeMatch = code.match(executeRegex);
 
             // Phase 1a: Money Hack Initiated
-            if (extractMatch && activeHackMode !== 'message' && pendingTarget === "") {
+            if (extractMatch && activeHackMode === null) {
                 const requestedAmount = parseInt(extractMatch[1]);
-                
-                // NEW: Hack Limit Enforcement
                 if (requestedAmount > 500) {
                     logToTerminal("> <span style='color: #ff2a2a;'>[ERR] CAPACITY OVERLOAD. MAX EXTRACTION LIMIT IS 500 €$.</span>");
-                    return; // Stop them right here
+                    return; 
                 }
-                
                 activeHackMode = 'money';
                 pendingHackAmount = requestedAmount;
+                setTargetModalStyle('green', '[ ENTER TARGET ALIAS TO EXTRACT FROM ]');
                 document.getElementById('target-modal').style.display = 'flex';
                 document.getElementById('target-input').focus();
             } 
-            // Phase 1b: Message Hack Initiated
-            else if (spoofMatch && activeHackMode !== 'money' && pendingSpoofReceiver === "") {
+            
+            // Phase 1b: Blackwall Drain Initiated
+            else if (blackwallMatch && activeHackMode === null) {
+                activeHackMode = 'blackwall';
+                // Turn the target modal aggressive red
+                setTargetModalStyle('red', '[ ENTER TARGET ALIAS TO PURGE ]');
+                document.getElementById('target-modal').style.display = 'flex';
+                document.getElementById('target-input').focus();
+            }
+            
+            // Phase 1c: Message Spoof Initiated
+            else if (spoofMatch && activeHackMode === null) {
                 activeHackMode = 'message';
                 document.getElementById('spoof-modal').style.display = 'flex';
                 document.getElementById('spoof-sender').focus();
             }
+            
             // Phase 2: Execute command detected
             else if (executeMatch) {
-                if (activeHackMode === 'money' && pendingTarget !== "") {
+                if ((activeHackMode === 'money' || activeHackMode === 'blackwall') && pendingTarget !== "") {
                     runHackAnimation();
                 } else if (activeHackMode === 'message' && pendingSpoofReceiver !== "") {
                     runHackAnimation();
@@ -283,8 +379,37 @@
                     logToTerminal("> <span style='color: #ff2a2a;'>[ERR] PENDING HACK INCOMPLETE. COMPLETE PARAMS FIRST.</span>");
                 }
             } 
-            else if (!extractMatch && !spoofMatch && code.trim() !== "") {
+            else if (!extractMatch && !spoofMatch && !blackwallMatch && code.trim() !== "") {
                 logToTerminal("> <span style='color: #ff2a2a;'>[ERR] INVALID SYNTAX DETECTED.</span>");
+            }
+        }
+
+        // Helper to colorize the Target Modal dynamically
+        function setTargetModalStyle(color, titleText) {
+            const modal = document.getElementById('target-modal');
+            const input = document.getElementById('target-input');
+            const btn = document.getElementById('target-lock-btn');
+            const title = document.getElementById('target-modal-title');
+            
+            title.innerText = titleText;
+            if (color === 'red') {
+                modal.style.borderColor = '#ff0000';
+                modal.style.boxShadow = '0 0 30px rgba(255, 0, 0, 0.5)';
+                input.style.borderColor = '#ff0000';
+                input.style.color = '#ff0000';
+                title.style.color = '#ff0000';
+                btn.style.color = '#000';
+                btn.style.background = '#ff0000';
+                btn.style.borderColor = '#ff0000';
+            } else {
+                modal.style.borderColor = '#33ff33';
+                modal.style.boxShadow = '0 0 30px rgba(51, 255, 51, 0.5)';
+                input.style.borderColor = '#33ff33';
+                input.style.color = '#33ff33';
+                title.style.color = '#33ff33';
+                btn.style.color = '#33ff33';
+                btn.style.background = 'rgba(51, 255, 51, 0.1)';
+                btn.style.borderColor = '#33ff33';
             }
         }
 
@@ -295,7 +420,13 @@
             if(target !== '') {
                 pendingTarget = target;
                 document.getElementById('target-modal').style.display = 'none';
-                logToTerminal(`> <span style="color: #33ff33;">TARGET LOCKED: ${pendingTarget}.</span> Awaiting Execution Protocol...`);
+                
+                if (activeHackMode === 'blackwall') {
+                    logToTerminal(`> <span style="color: #ff0000; text-shadow: 0 0 5px #ff0000;">TARGET MARKED FOR PURGE: ${pendingTarget}.</span> Awaiting Execution Protocol...`);
+                } else {
+                    logToTerminal(`> <span style="color: #33ff33;">TARGET LOCKED: ${pendingTarget}.</span> Awaiting Execution Protocol...`);
+                }
+                
                 document.getElementById('target-input').value = ''; 
                 document.getElementById('code-editor').focus();
             }
@@ -328,7 +459,6 @@
         }
 
         async function runHackAnimation() {
-            // --- NEW: COOLDOWN SYSTEM ---
             const timeSinceLastHack = Date.now() - lastHackTime;
             if (timeSinceLastHack < HACK_COOLDOWN_MS) {
                 const remainingSeconds = Math.ceil((HACK_COOLDOWN_MS - timeSinceLastHack) / 1000);
@@ -338,16 +468,23 @@
 
             const btn = document.querySelector('.exec-btn');
             btn.disabled = true;
-            btn.innerText = "[ BREACHING ICE... ]";
-
-            // Record the hack time to trigger the cooldown globally
+            btn.innerText = "[ BREACHING... ]";
             lastHackTime = Date.now();
+
+            // TRIGGER INTENSE BLACKWALL VISUALS
+            if (activeHackMode === 'blackwall') {
+                document.body.classList.add('blackwall-active');
+                document.getElementById('blackwall-overlay').style.display = 'block';
+                logToTerminal(`> <span style="color:#ff0000; font-weight:bold; font-size: 1.2rem;">INITIATING BLACKWALL PROTOCOL...</span>`);
+            }
 
             // Visual hacking sequence
             for(let i=0; i<15; i++) {
                 await new Promise(r => setTimeout(r, 100));
                 
-                if (activeHackMode === 'money') {
+                if (activeHackMode === 'blackwall') {
+                    logToTerminal(`> PIERCING ICE 0x${Math.floor(Math.random()*99999)}... <span style="color:#ff0000; text-shadow: 0 0 5px #ff0000;">CORRUPTED.</span>`);
+                } else if (activeHackMode === 'money') {
                     logToTerminal(`> OVERRIDING SUBNET 0x${Math.floor(Math.random()*99999)}... <span style="color:#33ff33;">bypassed.</span>`);
                 } else {
                     logToTerminal(`> INJECTING PACKET 0x${Math.floor(Math.random()*99999)}... <span style="color:#ff2a2a;">forced.</span>`);
@@ -356,20 +493,40 @@
                 if(i % 3 === 0) spawnGhostWindow();
             }
 
-            // --- NEW: 87% RNG SUCCESS RATE ---
-            const successRoll = Math.random(); // Generates a number between 0 and 1
-            if (successRoll > 0.87) {
+            // --- RNG SUCCESS RATES ---
+            // Blackwall = 40% success. Standard Hacks = 87% success.
+            const successRate = activeHackMode === 'blackwall' ? 0.40 : 0.87;
+            const successRoll = Math.random(); 
+
+            if (successRoll > successRate) {
                 // Hack failed!
-                logToTerminal(`> <span style='color: #ff2a2a; font-weight: bold;'>[CRITICAL ERR] NETWATCH TRACE DETECTED. CONNECTION SEVERED TO PREVENT BURN.</span>`);
+                if (activeHackMode === 'blackwall') {
+                    logToTerminal(`> <span style='color: #ff0000; font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 10px #ff0000;'>[FATAL ERR] ROGUE AI DETECTED. CONNECTION SEVERED TO PREVENT LETHAL FEEDBACK.</span>`);
+                } else {
+                    logToTerminal(`> <span style='color: #ff2a2a; font-weight: bold;'>[CRITICAL ERR] NETWATCH TRACE DETECTED. CONNECTION SEVERED.</span>`);
+                }
                 resetHackState();
                 btn.disabled = false;
                 btn.innerText = "[ EXECUTE PROTOCOL ]";
-                return; // Stop the function here so Firebase never gets updated
+                return; 
             }
 
-            // FIREBASE EXECUTION (If RNG succeeded)
+            // FIREBASE EXECUTION
             try {
-                if (activeHackMode === 'money') {
+                if (activeHackMode === 'blackwall') {
+                    // RUN BLACKWALL DRAIN
+                    const targetRef = db.collection('users').doc(pendingTarget);
+                    await db.runTransaction(async (transaction) => {
+                        // Set balance to absolute 0
+                        transaction.set(targetRef, { 
+                            balance: 0,
+                            wasHacked: Date.now() 
+                        }, { merge: true });
+                    });
+                    logToTerminal(`<br><span style="color: #ff0000; font-weight: bold; font-size: 1.4rem; text-shadow: 0 0 15px #ff0000;">> BLACKWALL ENGAGED. ALL FUNDS DESTROYED FOR ${pendingTarget}</span>`);
+
+                } else if (activeHackMode === 'money') {
+                    // RUN NORMAL MONEY HACK
                     const senderRef = db.collection('users').doc(pendingTarget);
                     const receiverRef = db.collection('users').doc(myEmail);
 
@@ -389,10 +546,10 @@
                             balance: receiverBalance + pendingHackAmount 
                         }, { merge: true });
                     });
-
                     logToTerminal(`<br><span style="color: #ffcc00; font-weight: bold; font-size: 1.2rem;">> extracted ${pendingHackAmount} €$ from ${pendingTarget}</span>`);
 
                 } else if (activeHackMode === 'message') {
+                    // RUN SPOOF
                     await db.collection("emails").add({
                         from: pendingSpoofSender,
                         to: pendingSpoofReceiver,
@@ -403,7 +560,6 @@
                         read: false,
                         attachedFunds: 0
                     });
-
                     logToTerminal(`<br><span style="color: #ff2a2a; font-weight: bold; font-size: 1.2rem;">> SPOOF SUCCESSFUL. COMMS INJECTED TO ${pendingSpoofReceiver}</span>`);
                 }
 
@@ -411,7 +567,7 @@
             } catch (error) {
                 console.error(error);
                 logToTerminal("> <span style='color: #ff2a2a;'>[ERR] NETWATCH BLOCKED THE PAYLOAD.</span>");
-                activeHackMode = null; 
+                resetHackState();
             }
 
             btn.disabled = false;
@@ -419,7 +575,6 @@
             document.getElementById('code-editor').focus();
         }
 
-        // Helper function to clear all states cleanly
         function resetHackState() {
             activeHackMode = null;
             pendingHackAmount = 0;
@@ -428,6 +583,10 @@
             pendingSpoofReceiver = "";
             pendingSpoofMessage = "";
             document.getElementById('code-editor').value = ""; 
+            
+            // Turn off Blackwall visuals
+            document.body.classList.remove('blackwall-active');
+            document.getElementById('blackwall-overlay').style.display = 'none';
         }
 
         function spawnGhostWindow() {
@@ -440,13 +599,22 @@
             win.style.transform = `scale(${randomScale})`;
             win.style.zIndex = Math.floor(9000 + Math.random() * 1000);
 
-            if (activeHackMode === 'message') {
+            // Change colors based on hack type
+            if (activeHackMode === 'blackwall') {
+                win.style.color = '#ff0000';
+                win.style.borderColor = '#ff0000';
+                win.style.boxShadow = '0 0 20px #ff0000';
+                win.style.background = 'rgba(30,0,0,0.9)';
+                win.innerHTML = `> FATAL ERROR<br>> CORRUPTING SECTOR: ${Math.random().toString(36).substring(2, 10)}<br>> [PURGE IMMINENT]`;
+            } else if (activeHackMode === 'message') {
                 win.style.color = '#ff2a2a';
                 win.style.borderColor = '#ff2a2a';
                 win.style.boxShadow = '0 0 15px #ff2a2a';
+                win.innerHTML = `> DATAMINE ACTIVE<br>> DECRYPTING: ${Math.random().toString(36).substring(2, 10)}<br>> [ACCESS GRANTED]`;
+            } else {
+                win.innerHTML = `> DATAMINE ACTIVE<br>> DECRYPTING: ${Math.random().toString(36).substring(2, 10)}<br>> [ACCESS GRANTED]`;
             }
 
-            win.innerHTML = `> DATAMINE ACTIVE<br>> DECRYPTING: ${Math.random().toString(36).substring(2, 10)}<br>> [ACCESS GRANTED]`;
             document.body.appendChild(win);
             setTimeout(() => win.remove(), 800 + Math.random() * 1000);
         }
