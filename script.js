@@ -99,7 +99,7 @@ function switchView(viewName) {
 
 function launchApp(appName) {
     console.log("Initializing connection to: " + appName);
-    alert(`[SYSTEM OVERRIDE]\nAttempting to access ${appName} database...\nAccess Granted.`);
+    // alert(`[SYSTEM OVERRIDE]\nAttempting to access ${appName} database...\nAccess Granted.`);
 }
 
 
@@ -453,7 +453,6 @@ function triggerHackAlarm() {
 }
 
 // --- NEW: LOCKDOWN LOGIC ---
-// --- NEW: LOCKDOWN LOGIC ---
 function triggerLockdown(endTime) {
     document.getElementById('lockdown-overlay').style.display = 'flex'; // Forces it to show
     if (lockdownTimerInterval) clearInterval(lockdownTimerInterval);
@@ -480,7 +479,7 @@ function clearLockdown() {
 
 async function payBailout() {
     if (currentFunds < 1000) {
-        alert("[NETWATCH ALERT] INSUFFICIENT FUNDS. YOU REMAIN IN LOCKDOWN.");
+        // alert("[NETWATCH ALERT] INSUFFICIENT FUNDS. YOU REMAIN IN LOCKDOWN.");
         return;
     }
     
@@ -497,11 +496,11 @@ async function payBailout() {
             transaction.set(userRef, { balance: bal - 1000, lockdownUntil: 0 }, { merge: true });
         });
         
-        alert("[NETWATCH ALERT] BAILOUT PAYMENT ACCEPTED. SYSTEM RESTORED.");
+        // alert("[NETWATCH ALERT] BAILOUT PAYMENT ACCEPTED. SYSTEM RESTORED.");
         clearLockdown();
     } catch (error) {
         console.error(error);
-        alert("[SYSTEM ERROR] Transaction failed. Lockdown remains active.");
+        // alert("[SYSTEM ERROR] Transaction failed. Lockdown remains active.");
     }
 }
 
@@ -700,12 +699,12 @@ async function sendOutboundEmail() {
     const transferAmount = parseInt(document.getElementById('compose-eddies').value) || 0;
     
     if (toField === '' || bodyField === '') {
-        alert("[SYSTEM ERROR] Cannot transmit. Missing recipient or datastream.");
+        // alert("[SYSTEM ERROR] Cannot transmit. Missing recipient or datastream.");
         return;
     }
 
     if (transferAmount > currentFunds) {
-        alert("[BANK ERROR] Insufficient funds. You don't have enough eddies.");
+        // alert("[BANK ERROR] Insufficient funds. You don't have enough eddies.");
         return;
     }
     
@@ -745,7 +744,7 @@ async function sendOutboundEmail() {
 
     } catch (error) {
         console.error("Error processing request: ", error);
-        alert("[SYSTEM OVERLOAD] Connection to server failed.");
+        // alert("[SYSTEM OVERLOAD] Connection to server failed.");
     }
 }
 
@@ -785,7 +784,7 @@ async function submitCallAlias() {
     }
     
     if (!target || target === myEmail) {
-        alert("INVALID ALIAS.");
+        // alert("INVALID ALIAS.");
         return;
     }
     
@@ -854,7 +853,7 @@ async function toggleCamera() {
             await callDocRef.update({ [amICaller ? 'callerCam' : 'targetCam']: true });
         } catch (err) {
             console.error("Camera access error:", err);
-            alert("[OPTICS ERROR] Could not access local camera feed.");
+            // alert("[OPTICS ERROR] Could not access local camera feed.");
         }
     } else {
         if (localVideoTrack) {
@@ -1056,9 +1055,9 @@ function setupPeerConnection(callDoc, isCaller) {
 async function devPurgeAllMessages() {
     if (myEmail !== 'yari@cybernet.com') return;
     
-    if (!confirm("[MAINFRAME WARNING]\nAre you sure you want to permanently delete ALL datashards from the database?")) {
-        return;
-    }
+    // if (!confirm("[MAINFRAME WARNING]\nAre you sure you want to permanently delete ALL datashards from the database?")) {
+    //     return;
+    // }
 
     try {
         const snapshot = await db.collection("emails").get();
@@ -1069,10 +1068,10 @@ async function devPurgeAllMessages() {
         });
 
         await batch.commit();
-        alert("[MAINFRAME PURGE COMPLETE] All datashards wiped from database.");
+        // alert("[MAINFRAME PURGE COMPLETE] All datashards wiped from database.");
     } catch (error) {
         console.error("Purge error:", error);
-        alert("[PURGE ERROR] Connection rejected by database ICE.");
+        // alert("[PURGE ERROR] Connection rejected by database ICE.");
     }
 }
 
@@ -1083,7 +1082,7 @@ async function devModifyFunds() {
     const amount = parseInt(document.getElementById('dev-funds-amount').value);
 
     if (!target || isNaN(amount)) {
-        alert("[DEV ERROR] Enter a valid target alias and integer amount.");
+        // alert("[DEV ERROR] Enter a valid target alias and integer amount.");
         return;
     }
 
@@ -1101,14 +1100,14 @@ async function devModifyFunds() {
 
         await userRef.set({ balance: newBal }, { merge: true });
         
-        alert(`[TRANSACTION SUCCESSFUL]\nUpdated ${target}'s balance to: ${newBal.toLocaleString()} €$`);
+        // alert(`[TRANSACTION SUCCESSFUL]\nUpdated ${target}'s balance to: ${newBal.toLocaleString()} €$`);
         
         document.getElementById('dev-target-user').value = '';
         document.getElementById('dev-funds-amount').value = '';
 
     } catch (error) {
         console.error("Fund modification error:", error);
-        alert("[DEV ERROR] Could not override target account balance.");
+        // alert("[DEV ERROR] Could not override target account balance.");
     }
 } 
 
@@ -1134,7 +1133,7 @@ async function submitReport() {
     }
 
     if (!target) {
-        alert("Please enter a valid target alias.");
+        // alert("Please enter a valid target alias.");
         return;
     }
 
@@ -1145,11 +1144,11 @@ async function submitReport() {
             timestamp: Date.now()
         });
         
-        alert("[NETWATCH UPLINK] Report successfully submitted to Tribunal for review.");
+        // alert("[NETWATCH UPLINK] Report successfully submitted to Tribunal for review.");
         closeReportModal();
     } catch (error) {
         console.error("Error submitting report:", error);
-        alert("[SYSTEM ERROR] Could not connect to Netwatch servers.");
+        // alert("[SYSTEM ERROR] Could not connect to Netwatch servers.");
     }
 }
 
@@ -1199,7 +1198,7 @@ async function dismissReport(reportId) {
 }
 
 async function punishUser(reportId, suspectEmail) {
-    if (!confirm(`Are you sure you want to enforce a 20-minute lockdown on ${suspectEmail}?`)) return;
+    // if (!confirm(`Are you sure you want to enforce a 20-minute lockdown on ${suspectEmail}?`)) return;
 
     // Calculate lockdown time (20 minutes from now)
     // 20 minutes * 60 seconds * 1000 milliseconds = 1200000 ms
@@ -1212,9 +1211,9 @@ async function punishUser(reportId, suspectEmail) {
         // Delete the report so it clears from the tribunal
         await db.collection('reports').doc(reportId).delete();
         
-        alert(`[TRIBUNAL ENFORCED] ${suspectEmail} is now locked down.`);
+        // alert(`[TRIBUNAL ENFORCED] ${suspectEmail} is now locked down.`);
     } catch (e) {
         console.error("Failed to enforce punishment:", e);
-        alert("[DEV ERROR] Could not execute lockdown protocol.");
+        // alert("[DEV ERROR] Could not execute lockdown protocol.");
     }
 }
