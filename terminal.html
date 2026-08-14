@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     
     <style>
-        /* Custom Terminal Overrides */
+        /* Custom Terminal Overrides - GREEN THEME */
         .terminal-container {
             width: 90%;
             max-width: 1200px;
@@ -15,36 +15,39 @@
             margin: 20px auto;
             display: flex;
             flex-direction: column;
-            border: 2px solid #ff2a2a;
-            background: rgba(10, 0, 0, 0.85);
-            box-shadow: 0 0 30px rgba(255, 42, 42, 0.2);
+            border: 2px solid #33ff33;
+            background: rgba(0, 10, 0, 0.85);
+            box-shadow: 0 0 30px rgba(51, 255, 51, 0.2);
             position: relative;
             z-index: 10;
         }
 
         .terminal-header {
-            background: rgba(255, 42, 42, 0.15);
-            color: #ff2a2a;
+            background: rgba(51, 255, 51, 0.15);
+            color: #33ff33;
             padding: 15px 20px;
-            border-bottom: 2px solid #ff2a2a;
+            border-bottom: 2px solid #33ff33;
             font-weight: bold;
             letter-spacing: 2px;
             display: flex;
             justify-content: space-between;
         }
 
+        /* FLEXBOX FIX FOR OVERFLOW */
         .editor-area {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             padding: 20px;
             gap: 15px;
+            overflow: hidden; /* Keeps everything locked inside */
         }
 
         #code-editor {
-            height: 50%;
-            background: #050101;
-            border: 1px solid rgba(255, 42, 42, 0.3);
+            flex-grow: 3; /* Takes up 3 parts of the space */
+            min-height: 0; /* Prevents overflow pushing the box out */
+            background: #010501;
+            border: 1px solid rgba(51, 255, 51, 0.3);
             color: #33ff33; 
             font-family: 'Courier New', Courier, monospace;
             font-size: 1.1rem;
@@ -55,16 +58,17 @@
         }
 
         #code-editor:focus {
-            border-color: #ff2a2a;
-            box-shadow: inset 0 0 20px rgba(255, 42, 42, 0.1);
+            border-color: #33ff33;
+            box-shadow: inset 0 0 20px rgba(51, 255, 51, 0.1);
         }
 
-        /* NEW: Terminal Output Log */
+        /* Terminal Output Log */
         #terminal-output {
-            height: 40%;
-            background: #020000;
-            border: 1px solid rgba(255, 42, 42, 0.2);
-            color: #ff2a2a;
+            flex-grow: 2; /* Takes up 2 parts of the space */
+            min-height: 0; /* Forces scrollbar instead of breaking borders */
+            background: #000000;
+            border: 1px solid rgba(51, 255, 51, 0.3);
+            color: #ffffff; /* White text for console logs */
             font-family: 'Courier New', Courier, monospace;
             font-size: 1rem;
             padding: 15px;
@@ -72,7 +76,7 @@
             line-height: 1.4;
         }
 
-        /* Custom green scrollbar for the terminal */
+        /* Custom green scrollbars */
         #code-editor::-webkit-scrollbar, #terminal-output::-webkit-scrollbar { width: 8px; }
         #code-editor::-webkit-scrollbar-track, #terminal-output::-webkit-scrollbar-track { background: transparent; }
         #code-editor::-webkit-scrollbar-thumb, #terminal-output::-webkit-scrollbar-thumb { background: #33ff33; }
@@ -80,6 +84,7 @@
         .terminal-controls {
             display: flex;
             justify-content: space-between;
+            flex-shrink: 0; /* Prevents buttons from squishing */
         }
 
         .action-btn {
@@ -94,14 +99,14 @@
         .return-btn { background: transparent; border: 1px solid var(--cyan); color: var(--cyan); }
         .return-btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 15px var(--cyan); }
 
-        .exec-btn { background: rgba(255, 42, 42, 0.1); border: 1px solid #ff2a2a; color: #ff2a2a; }
-        .exec-btn:hover { background: #ff2a2a; color: #000; box-shadow: 0 0 15px #ff2a2a; }
+        .exec-btn { background: rgba(51, 255, 51, 0.1); border: 1px solid #33ff33; color: #33ff33; }
+        .exec-btn:hover { background: #33ff33; color: #000; box-shadow: 0 0 15px #33ff33; }
 
         /* Hacking Target Modal */
         .target-modal {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #0a0000; border: 2px solid #ff2a2a; padding: 20px;
-            box-shadow: 0 0 30px rgba(255, 42, 42, 0.5); z-index: 100;
+            background: #050a05; border: 2px solid #33ff33; padding: 20px;
+            box-shadow: 0 0 30px rgba(51, 255, 51, 0.5); z-index: 100;
             display: flex; flex-direction: column; gap: 15px; text-align: center;
         }
         
@@ -117,17 +122,17 @@
     
     <div class="terminal-container">
         <div class="terminal-header">
-            <span>⬢ ICE_BREAKER_COMPILER_V1.1</span>
+            <span>⬢ ICE_BREAKER_COMPILER_V1.2</span>
             <span>NODE: LOCALHOST</span>
         </div>
         
         <div class="editor-area">
-            <!-- Input Area -->
-            <textarea id="code-editor" spellcheck="false" placeholder="// INIT NETRUNNER PROTOCOL&#10;// INPUT CUSTOM SYNTAX..."></textarea>
+            <!-- Input Area (Added keydown listener for ENTER key) -->
+            <textarea id="code-editor" spellcheck="false" placeholder="// INIT NETRUNNER PROTOCOL&#10;// INPUT CUSTOM SYNTAX..." onkeydown="handleEditorEnter(event)"></textarea>
             
             <!-- Output Log Area -->
             <div id="terminal-output">
-                > SYSTEM READY.<br>> AWAITING PROTOCOL EXECUTION...
+                <span style="color: #33ff33;">> SYSTEM READY.</span><br>> AWAITING PROTOCOL EXECUTION...
             </div>
 
             <div class="terminal-controls">
@@ -136,10 +141,10 @@
             </div>
         </div>
 
-        <!-- Hidden Target Modal -->
+        <!-- Hidden Target Modal (Added keydown listener for ENTER key) -->
         <div id="target-modal" class="target-modal" style="display: none;">
-            <span style="color: #ff2a2a; font-weight: bold; font-family: monospace;">[ ENTER TARGET ALIAS TO EXTRACT FROM ]</span>
-            <input type="text" id="target-input" style="background: transparent; border: 1px solid #ff2a2a; color: #ff2a2a; padding: 10px; font-family: monospace; outline: none;" autocomplete="off">
+            <span style="color: #33ff33; font-weight: bold; font-family: monospace;">[ ENTER TARGET ALIAS TO EXTRACT FROM ]</span>
+            <input type="text" id="target-input" onkeydown="handleTargetEnter(event)" style="background: transparent; border: 1px solid #33ff33; color: #33ff33; padding: 10px; font-family: monospace; outline: none;" autocomplete="off">
             <button class="action-btn exec-btn" onclick="lockTarget()">LOCK TARGET</button>
         </div>
     </div>
@@ -172,23 +177,39 @@
             out.scrollTop = out.scrollHeight;
         }
 
+        // --- NEW KEYBOARD LISTENERS ---
+        function handleEditorEnter(event) {
+            // Execute on ENTER. Allows normal new lines if SHIFT is held.
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Stops the textarea from just pushing text down
+                compileCode();
+            }
+        }
+
+        function handleTargetEnter(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                lockTarget();
+            }
+        }
+
         function compileCode() {
             const code = document.getElementById('code-editor').value;
             
-            // Regex matchers for your custom syntax
-            const extractRegex = /function\s*\{\s*Millitech:extract-eurodollars\s*--\s*(\d+)\s*\}/i;
-            const executeRegex = /function\s*\{\s*Millitech:execute-recent\s*\}/i;
+            // Extremely flexible case-insensitive regex matchers
+            const extractRegex = /function\s*\{\s*millitech:extract-eurodollars\s*--\s*(\d+)\s*\}/i;
+            const executeRegex = /function\s*\{\s*millitech:execute-recent\s*\}/i;
 
             const extractMatch = code.match(extractRegex);
             const executeMatch = code.match(executeRegex);
 
-            // Phase 1: They typed the extract command, but haven't executed it yet
+            // Phase 1: Extract command entered
             if (extractMatch && !executeMatch) {
                 pendingHackAmount = parseInt(extractMatch[1]);
                 document.getElementById('target-modal').style.display = 'flex';
                 document.getElementById('target-input').focus();
             } 
-            // Phase 2: They locked the target and typed the execute command
+            // Phase 2: Target is locked, Execute command entered
             else if (executeMatch && pendingTarget !== "" && pendingHackAmount > 0) {
                 runHackAnimation();
             } 
@@ -206,7 +227,8 @@
             if(target !== '') {
                 pendingTarget = target;
                 document.getElementById('target-modal').style.display = 'none';
-                logToTerminal(`> TARGET LOCKED: ${pendingTarget}. Awaiting Execution Protocol...`);
+                logToTerminal(`> <span style="color: #33ff33;">TARGET LOCKED: ${pendingTarget}.</span> Awaiting Execution Protocol...`);
+                document.getElementById('target-input').value = ''; // clear input for next time
             }
         }
 
@@ -218,7 +240,7 @@
             // The cool visual hacking sequence
             for(let i=0; i<15; i++) {
                 await new Promise(r => setTimeout(r, 100));
-                logToTerminal(`> OVERRIDING SUBNET 0x${Math.floor(Math.random()*99999)}... bypassed.`);
+                logToTerminal(`> OVERRIDING SUBNET 0x${Math.floor(Math.random()*99999)}... <span style="color:#33ff33;">bypassed.</span>`);
                 
                 // Spawn fake ghost windows randomly
                 if(i % 3 === 0) spawnGhostWindow();
@@ -247,6 +269,7 @@
                 // Clear pending hack so they have to type it again
                 pendingHackAmount = 0;
                 pendingTarget = "";
+                document.getElementById('code-editor').value = ""; // Auto-clear code window after successful hack
 
             } catch (error) {
                 console.error(error);
@@ -255,6 +278,7 @@
 
             btn.disabled = false;
             btn.innerText = "[ EXECUTE PROTOCOL ]";
+            document.getElementById('code-editor').focus();
         }
 
         // Creates a random glitchy window on the screen that auto-deletes
