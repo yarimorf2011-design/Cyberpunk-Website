@@ -411,15 +411,30 @@ function initBankWiretap() {
             const data = doc.data();
             const newBalance = data.balance;
             
-            // --- HACK DETECTION ---
             if (!isFirstLoad && data.wasHacked && data.wasHacked !== lastHackedTimestamp) {
                 triggerHackAlarm();
             }
             lastHackedTimestamp = data.wasHacked || null;
 
-            // --- NEW: NETWATCH LOCKDOWN WATCHER ---
+            // --- NETWATCH LOCKDOWN & PORT BURN WATCHER ---
             if (data.lockdownUntil && data.lockdownUntil > Date.now()) {
                 triggerLockdown(data.lockdownUntil);
+                
+                // If they failed the USB hack, permanently disable the button!
+                const portBtn = document.getElementById('jailbreak-port-btn');
+                if (data.jailbreakBurned && portBtn) {
+                    portBtn.innerText = "[ HARDWARE PORT FRIED - LETHAL FEEDBACK DETECTED ]";
+                    portBtn.style.color = "#4a0000";
+                    portBtn.style.borderColor = "#4a0000";
+                    portBtn.disabled = true;
+                    portBtn.style.pointerEvents = "none";
+                } else if (portBtn) {
+                    portBtn.innerText = "[ ACCESS HARDWARE PORT ]";
+                    portBtn.style.color = "#ff2a2a";
+                    portBtn.style.borderColor = "#ff2a2a";
+                    portBtn.disabled = false;
+                    portBtn.style.pointerEvents = "auto";
+                }
             } else {
                 clearLockdown();
             }
@@ -478,8 +493,8 @@ function clearLockdown() {
 }
 
 async function payBailout() {
-    if (currentFunds < 1000) {
-        // alert("[NETWATCH ALERT] INSUFFICIENT FUNDS. YOU REMAIN IN LOCKDOWN.");
+// Deduct funds and remove the lockdown timestamp + reset burned ports
+    transaction.set(userRef, { balance: bal - 1000, lockdownUntil: 0, jailbreakBurned: false }, { merge: true });
         return;
     }
     
@@ -1205,8 +1220,9 @@ async function punishUser(reportId, suspectEmail) {
     const lockdownTime = Date.now() + 1200000;
 
     try {
-        // Inject the lockdown timestamp into the user's document
-        await db.collection('users').doc(suspectEmail).set({ lockdownUntil: lockdownTime }, { merge: true });
+
+        // Inject the lockdown timestamp into the user's document AND reset the jailbreak state
+        await db.collection('users').doc(suspectEmail).set({ lockdownUntil: lockdownTime, jailbreakBurned: false }, { merge: true });
         
         // Delete the report so it clears from the tribunal
         await db.collection('reports').doc(reportId).delete();
@@ -1215,5 +1231,108 @@ async function punishUser(reportId, suspectEmail) {
     } catch (e) {
         console.error("Failed to enforce punishment:", e);
         // alert("[DEV ERROR] Could not execute lockdown protocol.");
+    }
+}
+async function executeJailbreak() {
+    const input = document.getElementById('jailbreak-input');
+    const log = document.getElementById('jailbreak-log');
+    const btn = document.querySelector('#jailbreak-modal .exec-btn');
+    const abortBtn = document.getElementById('jailbreak-abort-btn');
+    const progressBar = document.getElementById('jailbreak-progress-bar');
+    const progressContainer = document.getElementById('jailbreak-progress-container');
+    
+    // THE NEW SYNTAX
+    const jailbreakRegex = /function\s*\{\s*Blackwall:Breach-Protocol\s*\}/i;
+
+    if (jailbreakRegex.test(input.value.trim())) {
+        
+        // Lock all inputs so they can't interrupt the sequence
+        btn.disabled = true;
+        abortBtn.disabled = true;
+        input.disabled = true;
+        btn.innerText = "[ COMPILING BLACKWALL UPLINK... ]";
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+
+        // RNG: 86% success rate (Meaning exactly 14% failure rate)
+        const isSuccess = Math.random() > 0.14;
+        
+        // If it fails, pick a random moment between 30% and 80% to trigger the trap
+        const failPercent = Math.floor(Math.random() * 50) + 30; 
+
+        const totalTimeMs = 20000; // 20 seconds
+        const stepMs = 100;
+        const totalSteps = totalTimeMs / stepMs;
+        
+        for(let i = 0; i <= totalSteps; i++) {
+            await new Promise(r => setTimeout(r, stepMs));
+            
+            let percent = (i / totalSteps) * 100;
+            progressBar.style.width = `${percent}%`;
+
+            // Print random hacking text every 1.5 seconds
+            if(i % 15 === 0) { 
+                log.innerHTML += `<br>> ROUTING THROUGH SUB-RELAY 0x${Math.floor(Math.random()*99999)}... <span style="color:#33ff33;">SECURE</span>.`;
+                log.scrollTop = log.scrollHeight;
+            }
+
+            // TRIGGER THE 14% BLACKWALL TRAP
+            if (!isSuccess && percent >= failPercent) {
+                log.innerHTML += `<br><br>> <span style="color: #ff2a2a; font-weight: bold; font-size: 1.2rem;">[CRITICAL ALERT] BLACKWALL SENTINEL AI DETECTED.</span>`;
+                log.innerHTML += `<br>> <span style="color: #ff2a2a; font-weight: bold;">LETHAL FEEDBACK INITIATED. PHYSICAL HARDWARE COMPROMISED.</span>`;
+                log.scrollTop = log.scrollHeight;
+                
+                progressBar.style.background = "#ff2a2a";
+                progressContainer.style.borderColor = "#ff2a2a";
+                
+                // Write the failure to Firebase permanently
+                await db.collection('users').doc(myEmail).set({ jailbreakBurned: true }, { merge: true });
+                
+                setTimeout(() => {
+                    abortJailbreak();
+                    btn.disabled = false;
+                    abortBtn.disabled = false;
+                    input.disabled = false;
+                    btn.innerText = "[ EXECUTE OVERRIDE ]";
+                    progressBar.style.width = '0%';
+                    progressBar.style.background = "#33ff33";
+                    progressContainer.style.borderColor = "#33ff33";
+                    progressContainer.style.display = 'none';
+                    input.value = '';
+                }, 4000); // Give them 4 seconds to read their doom
+                
+                return; // Stop the function completely
+            }
+        }
+
+        // IF THE 20 SECONDS FINISHES WITH NO FAILURE
+        try {
+            await db.collection('users').doc(myEmail).set({ lockdownUntil: 0, jailbreakBurned: false }, { merge: true });
+            
+            log.innerHTML += `<br><br>> <span style="color: #ffcc00; font-weight: bold; font-size: 1.2rem;">BLACKWALL BREACH SUCCESSFUL. LOCKDOWN LIFTED.</span>`;
+            log.scrollTop = log.scrollHeight;
+
+            setTimeout(() => {
+                abortJailbreak();
+                btn.disabled = false;
+                abortBtn.disabled = false;
+                input.disabled = false;
+                btn.innerText = "[ EXECUTE OVERRIDE ]";
+                progressBar.style.width = '0%';
+                progressContainer.style.display = 'none';
+                input.value = '';
+            }, 2500);
+
+        } catch (error) {
+            console.error(error);
+            log.innerHTML += `<br>> <span style="color: #ff2a2a;">[ERR] DATABASE UPLINK REJECTED.</span>`;
+            btn.disabled = false;
+            abortBtn.disabled = false;
+            input.disabled = false;
+        }
+
+    } else {
+        log.innerHTML += `<br>> <span style="color: #ff2a2a;">[ERR] INVALID PAYLOAD SYNTAX.</span>`;
+        log.scrollTop = log.scrollHeight;
     }
 }

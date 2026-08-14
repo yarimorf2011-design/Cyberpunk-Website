@@ -331,14 +331,42 @@
         </div>
     </div>
 
-    <!-- NEW: FULL SCREEN LOCKDOWN OVERLAY -->
+<!-- FULL SCREEN LOCKDOWN OVERLAY -->
 <div id="lockdown-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 0, 0, 0.95); z-index: 999999; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 5px solid #ff2a2a; backdrop-filter: blur(10px);">
-    <h1 class="blink-text" style="color: #ff0000; font-size: 5rem; letter-spacing: 5px; margin-bottom: 10px; text-shadow: 0 0 30px #ff2a2a;">NETWATCH LOCKDOWN</h1>
+    <h1 class="blink-text" style="color: #ff2a2a; font-size: 5rem; letter-spacing: 5px; margin-bottom: 10px; text-shadow: 0 0 30px #ff2a2a;">NETWATCH LOCKDOWN</h1>
     <h2 style="color: #fff; margin-bottom: 30px; letter-spacing: 2px;">YOUR SYSTEM HAS BEEN SUSPENDED FOR CYBERCRIMES.</h2>
     <div style="font-size: 2.5rem; color: #ffcc00; margin-bottom: 40px; font-family: monospace; text-shadow: 0 0 15px rgba(255, 204, 0, 0.5);">
         TIME REMAINING: <span id="lockdown-timer">20:00</span>
     </div>
     <button onclick="payBailout()" class="send-btn" style="background: rgba(255, 204, 0, 0.1); border: 2px solid #ffcc00; color: #ffcc00; padding: 20px 40px; font-size: 1.5rem; cursor: pointer; transition: 0.2s;">PAY 1,000 €$ FINE TO UNLOCK</button>
+    
+    <!-- THE HIDDEN DATASHARD PORT (Added ID for the burnout effect) -->
+    <button id="jailbreak-port-btn" onclick="document.getElementById('jailbreak-port').click()" style="background: transparent; border: 1px dashed #ff2a2a; color: #ff2a2a; padding: 10px 20px; margin-top: 50px; font-family: monospace; cursor: pointer; opacity: 0.4; transition: 0.2s;" onmouseover="if(!this.disabled){this.style.opacity='1'; this.style.backgroundColor='rgba(255,42,42,0.1)';}" onmouseout="if(!this.disabled){this.style.opacity='0.4'; this.style.backgroundColor='transparent';}">[ ACCESS HARDWARE PORT ]</button>
+    <input type="file" id="jailbreak-port" style="display: none;" accept=".txt" onchange="initiateJailbreak(event)">
+</div>
+
+<!-- SECRET JAILBREAK TERMINAL -->
+<div id="jailbreak-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 10, 0, 0.95); z-index: 9999999; flex-direction: column; justify-content: center; align-items: center; border: 5px solid #33ff33; backdrop-filter: blur(10px);">
+    <div style="width: 80%; max-width: 800px; background: #000; border: 2px solid #33ff33; padding: 30px; box-shadow: 0 0 40px rgba(51, 255, 51, 0.3);">
+        <h2 style="color: #33ff33; margin-bottom: 20px; border-bottom: 1px solid #33ff33; padding-bottom: 10px; font-family: monospace; letter-spacing: 2px;">⬢ OVERRIDE PROTOCOL INITIATED</h2>
+        
+        <div id="jailbreak-log" style="color: #33ff33; font-family: monospace; height: 200px; overflow-y: auto; background: #050a05; padding: 15px; border: 1px solid rgba(51, 255, 51, 0.3); margin-bottom: 10px; line-height: 1.5;">
+            > SYSTEM READY.
+        </div>
+        
+        <!-- NEW: 20-Second Progress Bar -->
+        <div id="jailbreak-progress-container" style="display: none; width: 100%; border: 1px solid #33ff33; height: 15px; margin-bottom: 20px; background: #050a05;">
+            <div id="jailbreak-progress-bar" style="width: 0%; height: 100%; background: #33ff33; box-shadow: 0 0 10px #33ff33; transition: width 0.1s linear;"></div>
+        </div>
+        
+        <input type="text" id="jailbreak-input" placeholder="// INPUT BYPASS SYNTAX..." style="width: 100%; background: #050a05; border: 1px solid #33ff33; color: #33ff33; padding: 15px; font-family: monospace; font-size: 1.2rem; outline: none; margin-bottom: 20px; margin-top: 10px;" autocomplete="off" onkeydown="if(event.key === 'Enter') executeJailbreak()">
+        
+        <div style="display: flex; gap: 10px;">
+            <button class="action-btn exec-btn" style="flex-grow: 1; padding: 15px; background: rgba(51, 255, 51, 0.1); border: 1px solid #33ff33; color: #33ff33; cursor: pointer; font-weight: bold; letter-spacing: 2px;" onclick="executeJailbreak()" onmouseover="if(!this.disabled){this.style.background='#33ff33'; this.style.color='#000';}" onmouseout="if(!this.disabled){this.style.background='rgba(51, 255, 51, 0.1)'; this.style.color='#33ff33';}">[ EXECUTE OVERRIDE ]</button>
+            
+            <button id="jailbreak-abort-btn" class="action-btn return-btn" style="padding: 15px 30px; background: transparent; border: 1px solid #00f0ff; color: #00f0ff; cursor: pointer; font-weight: bold; letter-spacing: 2px;" onclick="abortJailbreak()" onmouseover="if(!this.disabled){this.style.background='#00f0ff'; this.style.color='#000';}" onmouseout="if(!this.disabled){this.style.background='transparent'; this.style.color='#00f0ff';}">[ ABORT ]</button>
+        </div>
+    </div>
 </div>
     
     <!-- SCRIPTS -->
