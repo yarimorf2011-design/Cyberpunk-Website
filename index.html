@@ -32,7 +32,9 @@
                 </div>
                 <div class="url">NETDIR://NCITY.PUB</div>
                 
-                <!-- RESTRUCTURED SYSTEM INFO -->
+                <!-- TRANSLATOR MODULE -->
+                <div id="google_translate_element" style="margin-left: auto; margin-right: 20px;"></div>
+
                 <div class="system-info" style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.4;">
                     <div id="user-funds-display" class="funds-glow">0 €$</div>
                     <div>
@@ -373,5 +375,16 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="script.js"></script>
+
+    <!-- GOOGLE TRANSLATE UPLINK -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>

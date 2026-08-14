@@ -1,4 +1,5 @@
 extract eurodollars: Function { Millitech:extract-eurodollars -- (amount) }
 send messages from other accounts: Function { Millitech:Send-UserMessage }
+get out of lockdown: function { Blackwall:Breach-Protocol }
 
 execute command: function { Millitech:execute-recent }
