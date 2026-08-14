@@ -399,8 +399,9 @@ function closeBank() {
 }
 
 // --- BANKING & EDDIES SYSTEM ---
+// --- BANKING & EDDIES SYSTEM ---
 let isFirstLoad = true;
-let lastHackedTimestamp = null; // NEW: Tracks recent attacks
+let lastHackedTimestamp = null; // Tracks recent attacks
 
 function initBankWiretap() {
     const userDocRef = db.collection('users').doc(myEmail);
@@ -410,20 +411,19 @@ function initBankWiretap() {
             const data = doc.data();
             const newBalance = data.balance;
             
-            // --- HACK DETECTION ---
-            if (data.wasHacked && data.wasHacked !== lastHackedTimestamp) {
-                // Ensure it's a fresh hack and not old data from yesterday
-                if (lastHackedTimestamp !== null || (Date.now() - data.wasHacked < 5000)) {
-                    triggerHackAlarm(); // Trigger the red visual override
-                }
-                lastHackedTimestamp = data.wasHacked;
+            // --- BULLETPROOF HACK DETECTION ---
+            // If the OS is already booted (!isFirstLoad) and a new hack comes in, trigger alarm!
+            if (!isFirstLoad && data.wasHacked && data.wasHacked !== lastHackedTimestamp) {
+                triggerHackAlarm();
             }
+            
+            // Always update the tracker so we don't trigger it twice
+            lastHackedTimestamp = data.wasHacked || null;
 
             if (isFirstLoad) {
                 isFirstLoad = false;
                 currentFunds = newBalance;
                 updateDisplays(newBalance);
-                lastHackedTimestamp = data.wasHacked || null;
             } else if (currentFunds !== newBalance) {
                 const difference = newBalance - currentFunds;
                 animateTransactionOverlay(difference);
@@ -431,6 +431,7 @@ function initBankWiretap() {
                 currentFunds = newBalance;
             }
         } else {
+            // New account creation fallback
             userDocRef.set({ balance: 1000 }).catch(e => console.error(e));
         }
     });
