@@ -1203,3 +1203,9 @@ body.hacked-theme .scanlines {
     80% { transform: translate(2px, -1px) }
     100% { transform: translate(0) }
 }
+
+/* --- NEGATIVE FUNDS WARNING STATE --- */
+.negative-funds {
+    color: #ff2a2a !important;
+    text-shadow: 0 0 10px #ff2a2a, 0 0 20px rgba(255, 42, 42, 0.8) !important;
+}

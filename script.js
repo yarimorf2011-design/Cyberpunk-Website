@@ -457,8 +457,25 @@ function updateDisplays(val) {
     const topDisplay = document.getElementById('user-funds-display');
     const bankDisplay = document.getElementById('bank-main-balance');
     
-    if (topDisplay) topDisplay.innerText = displayString;
-    if (bankDisplay) bankDisplay.innerText = displayString;
+    // Update Top Header Display
+    if (topDisplay) {
+        topDisplay.innerText = displayString;
+        if (val < 0) {
+            topDisplay.classList.add('negative-funds');
+        } else {
+            topDisplay.classList.remove('negative-funds');
+        }
+    }
+    
+    // Update Bank App Display
+    if (bankDisplay) {
+        bankDisplay.innerText = displayString;
+        if (val < 0) {
+            bankDisplay.classList.add('negative-funds');
+        } else {
+            bankDisplay.classList.remove('negative-funds');
+        }
+    }
 }
 
 function animateCounter(startVal, endVal) {
